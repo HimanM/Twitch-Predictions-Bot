@@ -4,9 +4,11 @@
 // @version      1.0.0
 // @description  Twitch prediction assistant with live odds panel, logs, manual controls, and optional auto-bet at T-5s.
 // @author       https://github.com/HimanM
-// @homepageURL  https://github.com/HimanM
-// @supportURL   https://github.com/HimanM
-// @source       https://github.com/HimanM
+// @homepageURL  https://github.com/HimanM/Twitch-Predictions-Bot
+// @supportURL   https://github.com/HimanM/Twitch-Predictions-Bot/issues
+// @source       https://github.com/HimanM/Twitch-Predictions-Bot
+// @downloadURL  https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/main/twitch-predictions.user.js
+// @updateURL    https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/main/twitch-predictions.user.js
 // @license      MIT
 // @match        https://www.twitch.tv/*
 // @grant        none

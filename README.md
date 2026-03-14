@@ -32,6 +32,18 @@
 
 ## Installation (Tampermonkey)
 
+### One-Click Install
+
+[![Install on Tampermonkey](https://img.shields.io/badge/Install-Tampermonkey-brightgreen?logo=tampermonkey)](https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/main/twitch-predictions.user.js)
+
+Direct install link:
+
+`https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/main/twitch-predictions.user.js`
+
+If Tampermonkey is installed, opening this link should immediately show the install prompt.
+
+### Manual Install
+
 ### Step 1 - Install Tampermonkey
 
 Install the Tampermonkey browser extension:
