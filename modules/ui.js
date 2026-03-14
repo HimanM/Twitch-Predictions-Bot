@@ -20,7 +20,7 @@
         right: 0;
         top: 2.75rem;
         width: 760px;
-        max-height: 70vh;
+        max-height: calc(100vh - 84px);
         overflow: hidden;
         background: var(--color-background-base);
         border: 1px solid var(--color-border-base);
@@ -47,18 +47,20 @@
       }
       .tpred-main {
         min-width: 0;
-        max-height: calc(74vh - 68px);
+        max-height: calc(100vh - 190px);
         overflow: auto;
         padding-right: .1rem;
+        padding-bottom: .7rem;
       }
       .tpred-logs-pane {
         min-width: 0;
-        max-height: calc(74vh - 68px);
-        overflow: hidden;
+        max-height: calc(100vh - 190px);
+        overflow: auto;
         display: flex;
         flex-direction: column;
         border-right: 1px solid rgba(255,255,255,.06);
         padding-right: .75rem;
+        padding-bottom: .7rem;
       }
       .tpred-logs-pane.tpred-hidden-pane {
         display: none;
@@ -283,7 +285,7 @@
         background: var(--color-background-body);
         border: 1px solid var(--color-border-base);
         border-radius: var(--border-radius-small);
-        min-height: 320px;
+        min-height: 220px;
         overflow: auto;
         padding: .35rem;
         white-space: pre-wrap;
@@ -563,6 +565,14 @@
     };
     document.addEventListener("mousedown", T.runtime.ui.outsideClickHandler, true);
 
+    if (T.runtime.ui.resizeHandler) {
+      window.removeEventListener("resize", T.runtime.ui.resizeHandler);
+    }
+    T.runtime.ui.resizeHandler = () => {
+      updatePanelLayout();
+    };
+    window.addEventListener("resize", T.runtime.ui.resizeHandler);
+
     T.runtime.ui.clearLogs?.addEventListener("click", () => {
       T.runtime.logs = [];
       T.runtime.lastLogByKey = Object.create(null);
@@ -717,6 +727,30 @@
     T.log("Injected control panel into top nav.");
   }
 
+  function updatePanelLayout() {
+    const panel = T.runtime.ui.panel;
+    if (!panel) return;
+
+    const rect = panel.getBoundingClientRect();
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 900;
+    const availableHeight = Math.max(360, Math.floor(viewportHeight - rect.top - 12));
+    panel.style.maxHeight = `${availableHeight}px`;
+
+    const header = panel.querySelector(".tpred-header");
+    const headerHeight = header ? Math.ceil(header.getBoundingClientRect().height) : 52;
+    const bodyHeight = Math.max(220, availableHeight - headerHeight - 26);
+
+    if (T.runtime.ui.panelBody) {
+      T.runtime.ui.panelBody.style.maxHeight = `${bodyHeight}px`;
+    }
+    if (T.runtime.ui.panelMain) {
+      T.runtime.ui.panelMain.style.maxHeight = `${bodyHeight}px`;
+    }
+    if (T.runtime.ui.logsPane) {
+      T.runtime.ui.logsPane.style.maxHeight = `${bodyHeight}px`;
+    }
+  }
+
   function renderUi() {
     if (!T.runtime.ui.root) return;
 
@@ -728,6 +762,7 @@
     if (T.runtime.ui.panel) {
       T.runtime.ui.panel.style.width = T.settings.logsVisible ? "780px" : "500px";
     }
+    updatePanelLayout();
     if (T.runtime.ui.toggleLogs) {
       T.runtime.ui.toggleLogs.textContent = T.settings.logsVisible ? "Hide Logs" : "Show Logs";
     }
