@@ -47,13 +47,13 @@
       }
       .tpred-main {
         min-width: 0;
-        max-height: calc(70vh - 68px);
+        max-height: calc(74vh - 68px);
         overflow: auto;
         padding-right: .1rem;
       }
       .tpred-logs-pane {
         min-width: 0;
-        max-height: calc(70vh - 68px);
+        max-height: calc(74vh - 68px);
         overflow: hidden;
         display: flex;
         flex-direction: column;
@@ -240,13 +240,60 @@
         background: var(--color-background-body);
         border: 1px solid var(--color-border-base);
         border-radius: var(--border-radius-small);
-        max-height: 220px;
+        min-height: 320px;
         overflow: auto;
         padding: .35rem;
         white-space: pre-wrap;
         flex: 1;
       }
+      .tpred-logs-footer {
+        margin-top: .45rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .tpred-logs-footer img {
+        width: 52px;
+        height: 52px;
+        object-fit: contain;
+        opacity: .9;
+        filter: drop-shadow(0 2px 6px rgba(145, 71, 255, .22));
+      }
+      .tpred-bet-names {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .45rem;
+        margin-top: .35rem;
+      }
+      .tpred-bet-name {
+        color: #bb8cff;
+        text-align: center;
+        font-size: clamp(11px, 1.1vw, 14px);
+        font-weight: 600;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
       .tpred-log-line { margin: .2rem 0; }
+      #tpred-bet-0,
+      #tpred-bet-1 {
+        border: 1px solid transparent;
+      }
+      #tpred-bet-0 {
+        background: rgba(56, 122, 255, .16);
+        border-color: rgba(56, 122, 255, .55);
+      }
+      #tpred-bet-0:hover {
+        background: rgba(56, 122, 255, .24);
+      }
+      #tpred-bet-1 {
+        background: rgba(245, 0, 155, .16);
+        border-color: rgba(245, 0, 155, .55);
+      }
+      #tpred-bet-1:hover {
+        background: rgba(245, 0, 155, .24);
+      }
       #tpred-github { text-decoration: none; }
       @media (max-width: 900px) {
         .tpred-panel { width: min(96vw, 760px); right: -8px; }
@@ -336,6 +383,9 @@
               </div>
             </div>
             <div id="tpred-logs" class="tpred-logs"></div>
+            <div class="tpred-logs-footer">
+              <img src="https://i.ibb.co/gbWGc64j/UNDERDOG-TW-PRED.png" alt="Underdog" />
+            </div>
           </div>
           <div id="tpred-main" class="tpred-main">
             <div id="tpred-status" class="CoreText-sc-1txzju1-0"></div>
@@ -365,10 +415,14 @@
               <input id="tpred-auto-max-bet" type="number" min="1" step="1" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
             </div>
             <div id="tpred-prediction" class="tpred-prediction"></div>
+            <div class="tpred-bet-names">
+              <div id="tpred-bet-name-0" class="tpred-bet-name">Outcome A</div>
+              <div id="tpred-bet-name-1" class="tpred-bet-name">Outcome B</div>
+            </div>
             <div class="tpred-row tpred-inline">
               <button id="tpred-bet-0" class="ScCoreButton-sc-ocjdkq-0 yezmM tpred-native-btn">
                 <div class="ScCoreButtonLabel-sc-s7h2b7-0 OyGFd">
-                  <div data-a-target="tw-core-button-label-text" class="Layout-sc-1xcs6mc-0 iBachR">Predict A</div>
+                  <div data-a-target="tw-core-button-label-text" class="Layout-sc-1xcs6mc-0 iBachR">Bet A</div>
                   <div class="ScCoreButtonIcon-sc-ypak37-0 gcsIzP tw-core-button-icon">
                     <div class="ScSvgWrapper-sc-wkgzod-0 kccyMt tw-svg" data-a-selector="tw-core-button-icon">
                       <svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 5v2a5 5 0 0 1 5 5h2a7 7 0 0 0-7-7Z"></path><path fill-rule="evenodd" d="M1 12C1 5.925 5.925 1 12 1s11 4.925 11 11-4.925 11-11 11S1 18.075 1 12Zm11 9a9 9 0 1 1 0-18 9 9 0 0 1 0 18Z" clip-rule="evenodd"></path></svg>
@@ -378,7 +432,7 @@
               </button>
               <button id="tpred-bet-1" class="ScCoreButton-sc-ocjdkq-0 yezmM tpred-native-btn">
                 <div class="ScCoreButtonLabel-sc-s7h2b7-0 OyGFd">
-                  <div data-a-target="tw-core-button-label-text" class="Layout-sc-1xcs6mc-0 iBachR">Predict B</div>
+                  <div data-a-target="tw-core-button-label-text" class="Layout-sc-1xcs6mc-0 iBachR">Bet B</div>
                   <div class="ScCoreButtonIcon-sc-ypak37-0 gcsIzP tw-core-button-icon">
                     <div class="ScSvgWrapper-sc-wkgzod-0 kccyMt tw-svg" data-a-selector="tw-core-button-icon">
                       <svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 5v2a5 5 0 0 1 5 5h2a7 7 0 0 0-7-7Z"></path><path fill-rule="evenodd" d="M1 12C1 5.925 5.925 1 12 1s11 4.925 11 11-4.925 11-11 11S1 18.075 1 12Zm11 9a9 9 0 1 1 0-18 9 9 0 0 1 0 18Z" clip-rule="evenodd"></path></svg>
@@ -516,6 +570,7 @@
       T.settings.manualAmount = val;
       T.runtime.ui.manualAmount.value = String(val);
       T.saveSettings();
+      renderUi();
     });
 
     T.runtime.ui.autoMinBet?.addEventListener("change", () => {
@@ -625,14 +680,14 @@
       const btn1 = T.runtime.ui.root.querySelector("#tpred-bet-1");
       const btn0Label = T.runtime.ui.root.querySelector("#tpred-bet-0 [data-a-target='tw-core-button-label-text']");
       const btn1Label = T.runtime.ui.root.querySelector("#tpred-bet-1 [data-a-target='tw-core-button-label-text']");
+      const btn0Name = T.runtime.ui.root.querySelector("#tpred-bet-name-0");
+      const btn1Name = T.runtime.ui.root.querySelector("#tpred-bet-name-1");
+      const manualAmount = Math.max(1, parseInt(T.runtime.ui.manualAmount?.value || String(T.settings.manualAmount || 100), 10) || 100);
 
-      const pendingText0 = botPending?.outcomeId === "0" ? `  BOT ${botPending.amount}` : "";
-      const pendingText1 = botPending?.outcomeId === "1" ? `  BOT ${botPending.amount}` : "";
-      const placedText0 = botPlaced?.outcomeId === "0" ? `  BET ${botPlaced.amount}` : "";
-      const placedText1 = botPlaced?.outcomeId === "1" ? `  BET ${botPlaced.amount}` : "";
-
-      if (btn0Label) btn0Label.textContent = `Predict ${a.title}${placedText0 || pendingText0}`;
-      if (btn1Label) btn1Label.textContent = `Predict ${b.title}${placedText1 || pendingText1}`;
+      if (btn0Name) btn0Name.textContent = a.title;
+      if (btn1Name) btn1Name.textContent = b.title;
+      if (btn0Label) btn0Label.textContent = `Bet A ${manualAmount}`;
+      if (btn1Label) btn1Label.textContent = `Bet B ${manualAmount}`;
 
       btn0?.classList.toggle("tpred-bot-pending", botPending?.outcomeId === "0");
       btn1?.classList.toggle("tpred-bot-pending", botPending?.outcomeId === "1");
@@ -648,8 +703,13 @@
       const btn1 = T.runtime.ui.root.querySelector("#tpred-bet-1");
       const btn0Label = T.runtime.ui.root.querySelector("#tpred-bet-0 [data-a-target='tw-core-button-label-text']");
       const btn1Label = T.runtime.ui.root.querySelector("#tpred-bet-1 [data-a-target='tw-core-button-label-text']");
-      if (btn0Label) btn0Label.textContent = "Predict A";
-      if (btn1Label) btn1Label.textContent = "Predict B";
+      const btn0Name = T.runtime.ui.root.querySelector("#tpred-bet-name-0");
+      const btn1Name = T.runtime.ui.root.querySelector("#tpred-bet-name-1");
+      const manualAmount = Math.max(1, parseInt(T.runtime.ui.manualAmount?.value || String(T.settings.manualAmount || 100), 10) || 100);
+      if (btn0Name) btn0Name.textContent = "Outcome A";
+      if (btn1Name) btn1Name.textContent = "Outcome B";
+      if (btn0Label) btn0Label.textContent = `Bet A ${manualAmount}`;
+      if (btn1Label) btn1Label.textContent = `Bet B ${manualAmount}`;
       btn0?.classList.remove("tpred-bot-pending", "tpred-bot-placed");
       btn1?.classList.remove("tpred-bot-pending", "tpred-bot-placed");
       T.runtime.ui.prediction.innerHTML = `<div class="CoreText-sc-1txzju1-0">No prediction state detected.</div>`;
