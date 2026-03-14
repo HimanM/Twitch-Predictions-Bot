@@ -1,7 +1,11 @@
 <div align="center">
   <img src="pics/UNDERDOG_TW_PRED_ICON.png" width="96" alt="Twitch Prediction Bot Icon" />
   <h1>Twitch Prediction Auto-Bet (Underdog)</h1>
-  <p>A Tampermonkey userscript that monitors Twitch Predictions, tracks live odds, and auto-bets on the underdog at T-5 seconds - with a native-feeling top-nav control panel, live logs, and dry-run mode.</p>
+  <p>
+    A modular Tampermonkey userscript that monitors Twitch Predictions,
+    evaluates live underdog odds, and places bets near close with a configurable
+    in-page control panel.
+  </p>
   <img src="https://img.shields.io/badge/Tampermonkey-Compatible-brightgreen?logo=tampermonkey" alt="Tampermonkey" />
   <img src="https://img.shields.io/badge/License-MIT-blue" alt="MIT License" />
   <img src="https://img.shields.io/badge/Platform-Twitch-9146ff?logo=twitch" alt="Twitch" />
@@ -15,18 +19,30 @@
 
 ---
 
+## Current Version Notes (v1.1)
+
+- Modular architecture via `@require` modules (no monolithic main logic file).
+- Auto trigger runs at T-7 seconds by default.
+- Custom amount path is attempted first for both manual and auto placement.
+- Quick outcome fallback is available if custom controls are unavailable.
+- Split panel UI with toggleable logs pane and persistent UI settings.
+
+---
+
 ## Features
 
 | Feature | Description |
 | --- | --- |
-| **Auto-Bet** | Automatically places a bet at T-5 seconds using the best evaluated decision |
-| **Underdog Strategy** | Always bets on the lower-pooled side with tiered sizing |
-| **Discovery Probe** | Periodically checks for new predictions without leaving the panel open |
-| **Top-Nav Panel** | Injected Twitch-style panel with status, logs, and manual controls |
-| **Dry Run Mode** | Simulates all actions in the log without placing any real clicks |
-| **Persistent Settings** | All toggles and values saved across sessions via `localStorage` |
-| **Region Safety** | Skips automatically when region restrictions are detected |
-| **Duplicate Guard** | Places at most one bet per detected prediction key |
+| **Auto-Bet** | Places a bet near close using latest evaluated decision |
+| **Underdog Strategy** | Bets the lower-pooled side using ratio tiers |
+| **Custom Min/Max Limits** | `Auto Min Bet` and `Auto Max Bet` bound bet sizing |
+| **Disable Skip Mode** | Forces Auto Min on low-edge spots instead of skipping |
+| **Discovery Probe** | Periodically checks for new predictions while idle |
+| **Top-Nav Panel** | Injected Twitch-style panel with status, controls, and logs |
+| **Toggleable Logs Pane** | Show/hide logs to reduce UI noise |
+| **Dry Run Mode** | Simulates actions without placing real clicks |
+| **Persistent Settings** | Saved in `localStorage` (`tpred.settings.v1`) |
+| **Duplicate Guard** | At most one auto placement per prediction key |
 
 ---
 
@@ -34,51 +50,41 @@
 
 ### One-Click Install
 
-[![Install on Tampermonkey](https://img.shields.io/badge/Install-Tampermonkey-brightgreen?logo=tampermonkey)](https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/twitch-predictions.user.js)
+[![Install on Tampermonkey](https://img.shields.io/badge/Install-Tampermonkey-brightgreen?logo=tampermonkey)](https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/feat/modularize/twitch-predictions.user.js)
 
-Direct install link:
+Direct install URL:
 
-`https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/twitch-predictions.user.js`
+`https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/feat/modularize/twitch-predictions.user.js`
 
-Fallback install link (GitHub raw view):
+Fallback raw URL:
 
-`https://github.com/HimanM/Twitch-Predictions-Bot/blob/master/twitch-predictions.user.js?raw=1`
-
-If Tampermonkey is installed, opening either link should show the install prompt.
+`https://github.com/HimanM/Twitch-Predictions-Bot/blob/feat/modularize/twitch-predictions.user.js?raw=1`
 
 ### Manual Install
 
-### Step 1 - Install Tampermonkey
+1. Install Tampermonkey in your browser.
+2. Create a new userscript.
+3. Replace template content with `twitch-predictions.user.js` from this repo.
+4. Save and enable.
+5. Open Twitch and click the bot icon in top nav.
 
-Install the Tampermonkey browser extension:
+---
 
-- **Chrome / Edge / Brave:** [Chrome Web Store](https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
-- **Firefox:** [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/)
+## Module Layout
 
-### Step 2 - Create the Script
+Main file:
 
-1. Click the **Tampermonkey icon** in your toolbar.
-2. Select **Create a new script**.
-3. Delete all default template content in the editor.
+- `twitch-predictions.user.js` (bootstrap header + `@require` list + init)
 
-### Step 3 - Paste the Script
+Modules loaded in order:
 
-1. Open `twitch-predictions.user.js` from this repository.
-2. Copy the entire file contents.
-3. Paste into the Tampermonkey editor.
-
-### Step 4 - Save and Enable
-
-1. Press **Ctrl+S** (or Cmd+S on Mac) to save.
-2. Confirm the script appears in your **Tampermonkey Dashboard** with the toggle set to **Enabled**.
-
-### Step 5 - Use It
-
-1. Navigate to any Twitch channel (`https://www.twitch.tv/<channel>`).
-2. Look for the **prediction bot icon** added to the top navigation bar.
-3. Click the icon to open the control panel.
-
-> **Tip:** Enable **Dry Run** on first use to verify detection without placing any bets.
+1. `modules/config.js`
+2. `modules/utils.js`
+3. `modules/dom.js`
+4. `modules/strategy.js`
+5. `modules/bettor.js`
+6. `modules/ui.js`
+7. `modules/runner.js`
 
 ---
 
@@ -86,112 +92,68 @@ Install the Tampermonkey browser extension:
 
 | Setting | Default | Description |
 | --- | --- | --- |
-| **Enable Auto-Bet** | On | Master switch for automated betting |
-| **Dry Run** | Off | Simulates all actions in logs, no real clicks |
-| **Auto Open Channel Points** | On | Opens the Channel Points popover automatically |
-| **Auto Open Prediction Details** | On | Clicks into the prediction detail view automatically |
-| **Discovery Probe (ms)** | 20000 | Interval to check for new predictions while idle. Min 5000, max 300000 |
-| **Manual Amount** | 100 | Point amount used by the Predict A / Predict B buttons |
-
-All settings are saved to `localStorage` key `tpred.settings.v1` and persist across browser sessions.
+| **Enable Auto-Bet** | On | Master on/off for automation |
+| **Dry Run** | Off | Simulate actions only |
+| **Disable Skip** | Off | Bet Auto Min when strategy would skip |
+| **Auto Open Channel Points** | On | Auto-opens reward center |
+| **Auto Open Prediction Details** | On | Auto-opens prediction detail view |
+| **Discovery Probe (ms)** | 40000 | Idle probe interval (clamped 5000 to 300000) |
+| **Active Eval (ms)** | 1000 | Active evaluation interval (clamped 1000 to 60000) |
+| **Manual Amount** | 100 | Amount used by manual A/B buttons |
+| **Auto Min Bet** | 1 | Lower bound for auto size validity |
+| **Auto Max Bet** | 1000 | Upper bound for auto size cap |
+| **Logs Visibility** | On | Show/hide logs pane in panel |
 
 ---
 
-## Algorithm Explained
+## Strategy and Bet Sizing
 
-### Core Idea
+### 1. Pick Underdog
 
-The strategy exploits an asymmetry in Twitch's pari-mutuel (pool-based) system: when one side has a significantly larger pool than the other, betting on the underdog (smaller pool) returns a higher multiplier if it wins. This script waits until the last few seconds before the prediction closes - when pools are close to final - to get a stable read on the odds before committing.
+The side with fewer pooled points is treated as underdog.
 
-### Step 1 - Detect and Read
+`ratio = favoritePoints / underdogPoints`
 
-Every 5 seconds while a prediction is open, the script reads from the Twitch DOM:
+### 2. Tier Base Amount
 
-- The total points pooled on each outcome.
-- The timer (seconds remaining).
-- Your available channel points balance.
-- Whether a region restriction is active.
-
-### Step 2 - Calculate the Underdog
-
-```
-ratio = favorite.totalPoints / underdog.totalPoints
-```
-
-The side with the smaller pool is the **underdog**. A ratio of 5 means the favorite has 5× more points, so underdog bettors share a larger prize pool if they win.
-
-### Step 3 - Tier-Based Bet Sizing
-
-The script bets more aggressively when the underdog is a bigger longshot:
-
-| Ratio (favorite : underdog) | Bet Amount |
+| Ratio (favorite : underdog) | Base Amount |
 | --- | ---: |
-| 100 : 1 or more | 500 pts |
-| 20 : 1 or more | 400 pts |
-| 10 : 1 or more | 300 pts |
-| 5 : 1 or more | 200 pts |
-| 2 : 1 or more | 100 pts |
-| Less than 2 : 1 | **Skip** (near 50/50) |
+| 100:1+ | 500 |
+| 20:1+ | 400 |
+| 10:1+ | 300 |
+| 5:1+ | 200 |
+| 2:1+ | 100 |
+| <2:1 | skip |
 
-Near 50/50 outcomes are skipped - the payout multiplier is too low to justify the risk.
+### 3. Apply Bounds and Safety
 
-### Step 4 - Safety Caps
+`amount = min(tierBase, autoMaxBet, availablePoints, floor(availablePoints * 0.5))`
 
-Before placing, the calculated amount is clamped:
+If `amount < autoMinBet`, strategy returns skip.
 
-```
-final amount = min(tier amount, 1000, 50% of available points)
-```
-
-- **Hard cap:** Never bets more than 1000 points regardless of tier.
-- **Wallet cap:** Never bets more than 50% of your current balance.
-- **Zero guard:** If available points read as 0 (region restriction or wallet empty), skip entirely.
-
-### Step 5 - Execute at T-5 Seconds
-
-A fast watch loop (every 250ms) fires the placement once the timer drops to 5 seconds or below. The decision was already computed ahead of time - the last-second task is just clicking. After placing, the prediction key is recorded to prevent any duplicate bet on the same prediction.
+When **Disable Skip** is enabled, skip decisions can be converted to a forced min-sized bet (subject to max and wallet caps).
 
 ---
 
 ## Runtime Flow
 
-```
-Script starts
-   │
-   ├── MutationObserver (watches DOM for prediction UI)
-   │
-   └── Discovery Probe (every N ms while idle)
-         │
-         ├── Open Channel Points popover (if needed)
-         ├── Read list card → parse status
-         │
-         ├── Status: ACTIVE
-         │     ├── Evaluation loop (every 5000ms)
-         │     │     └── readPredictionState() → decideBet() → pendingDecision
-         │     └── Watch loop (every 250ms)
-         │           └── secondsLeft <= 5 → placeBet(pendingDecision)
-         │                 └── Record prediction key → clear loops
-         │
-         └── Status: not ACTIVE
-               └── Close popover → return to idle
-```
+1. Startup initializes UI and observer.
+2. Idle mode runs discovery probe at configured interval.
+3. On active prediction:
+   - Active eval loop updates `pendingDecision`.
+   - Watch loop tracks timer and fires near trigger (`<= 7s`).
+4. Placement sequence:
+   - Prefer custom mode toggle + per-outcome input + Vote.
+   - If custom controls are missing, fallback can click quick outcome button.
+5. Loops clear and return to discovery mode.
 
 ---
 
-## Debugging
+## Logs and Diagnostics
 
-1. Open browser **DevTools** (`F12`).
-2. Go to the **Console** tab.
-3. Filter by: `[TwitchPred]`
-
-You will see timestamped entries for:
-
-- Discovery probe events (open, status read, close)
-- Odds and timer updates every 5 seconds
-- Pending decision changes (which side, how much)
-- Bet placement attempts - success, dry-run, or failure reason
-
-All log lines are also visible live in the **Logs** section of the in-page control panel.
+- Browser console prefix: `[TwitchPred]`
+- In-panel logs show discovery, updates, decision changes, and placement outcomes.
+- Manual placement emits first-failure cause diagnostics when a path cannot be resolved.
 
 ---
 
@@ -199,30 +161,24 @@ All log lines are also visible live in the **Logs** section of the in-page contr
 
 | File | Description |
 | --- | --- |
-| `twitch-predictions.user.js` | Main installable Tampermonkey userscript |
-| `algorithm.js` | Standalone algorithm helpers and Node-runnable tests |
-| `plan.md` | Implementation notes, selector strategy, architecture |
-| `pics/` | Screenshots and icon assets |
+| `twitch-predictions.user.js` | Installable userscript bootstrap |
+| `modules/` | Runtime modules (`config`, `utils`, `dom`, `strategy`, `bettor`, `ui`, `runner`) |
+| `algorithm.js` | Standalone strategy helper and tests |
+| `plan.md` | Planning and implementation notes |
+| `pics/` | UI screenshots and icon assets |
 
 ---
 
 ## Known Limitations
 
-- Twitch's UI is dynamically generated and can change without notice. If the script stops detecting predictions, class names or DOM structure may have shifted.
-- The custom amount + confirm button path is heuristic-based; in some layouts it may fall back to a fixed quick-bet amount.
-- The script cannot intercept Twitch's internal WebSocket; all reads are DOM-based.
+- Twitch DOM can change without notice, which may break selectors.
+- Custom controls are preferred, but Twitch can still render alternate layouts.
+- All reads and actions are DOM-driven; no direct API integration.
 
 ---
 
-## Safety and Behavior Guarantees
+## Legal Notice
 
-- Bets once per prediction - duplicate placements are blocked by key tracking.
-- No repeated retries after a failed placement attempt.
-- Automatically skips locked, resolved, or canceled predictions.
-- Does not bet when pool data is incomplete or one side reads as zero.
-
----
-
-## Legal and Risk Notice
-
-This script is unofficial and not affiliated with Twitch Interactive, Inc. Use at your own risk. Channel Points have no real monetary value. Automated interactions with platform UIs may be subject to platform terms of service.
+This project is unofficial and not affiliated with Twitch Interactive, Inc.
+Use at your own risk. Channel Points have no cash value.
+Automated UI interaction may be subject to Twitch terms.
