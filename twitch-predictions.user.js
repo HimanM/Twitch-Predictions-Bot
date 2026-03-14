@@ -7,20 +7,20 @@
 // @homepageURL  https://github.com/HimanM/Twitch-Predictions-Bot
 // @supportURL   https://github.com/HimanM/Twitch-Predictions-Bot/issues
 // @source       https://github.com/HimanM/Twitch-Predictions-Bot
-// @downloadURL  https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/twitch-predictions.user.js
-// @updateURL    https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/twitch-predictions.user.js
+// @downloadURL  https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/feat/modularize/twitch-predictions.user.js
+// @updateURL    https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/feat/modularize/twitch-predictions.user.js
 // @license      MIT
 // @match        https://www.twitch.tv/*
 // @grant        none
 // @run-at       document-idle
 // @icon         https://i.ibb.co/gbWGc64j/UNDERDOG-TW-PRED.png
-// @require      https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/modules/config.js
-// @require      https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/modules/utils.js
-// @require      https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/modules/dom.js
-// @require      https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/modules/strategy.js
-// @require      https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/modules/bettor.js
-// @require      https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/modules/ui.js
-// @require      https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/modules/runner.js
+// @require      https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/feat/modularize/modules/config.js
+// @require      https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/feat/modularize/modules/utils.js
+// @require      https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/feat/modularize/modules/dom.js
+// @require      https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/feat/modularize/modules/strategy.js
+// @require      https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/feat/modularize/modules/bettor.js
+// @require      https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/feat/modularize/modules/ui.js
+// @require      https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/feat/modularize/modules/runner.js
 // ==/UserScript==
 
 (function () {
