@@ -12,7 +12,7 @@
     <a href="https://www.tampermonkey.net/" target="_blank" rel="noreferrer">
       <img src="https://img.shields.io/badge/Tampermonkey-Compatible-brightgreen?logo=tampermonkey" alt="Tampermonkey" />
     </a>
-    <a href="https://opensource.org/license/mit" target="_blank" rel="noreferrer">
+    <a href="https://github.com/HimanM/Twitch-Predictions-Bot/blob/master/LICENSE" target="_blank" rel="noreferrer">
       <img src="https://img.shields.io/badge/License-MIT-blue" alt="MIT License" />
     </a>
     <a href="https://www.twitch.tv/" target="_blank" rel="noreferrer">
