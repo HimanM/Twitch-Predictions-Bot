@@ -19,10 +19,22 @@
     return Boolean(el && el.offsetParent !== null);
   }
 
+  function getRewardCenterBody() {
+    return document.querySelector("#channel-points-reward-center-body");
+  }
+
+  function getCustomModeToggleButton() {
+    const body = getRewardCenterBody();
+    if (!body) return null;
+    return body.querySelector('[data-test-selector="prediction-checkout-active-footer__input-type-toggle"]');
+  }
+
   function findCustomAmountInput() {
-    // Fallback heuristics: Twitch UI can switch between fixed amount chips and custom input.
+    // Fallback helper used by legacy flow and diagnostics.
     const candidates = [
-      'input[type="number"]',
+      '#channel-points-reward-center-body input[data-a-target="tw-input"][type="number"]',
+      '#channel-points-reward-center-body .custom-prediction-button input[type="number"]',
+      'input[data-a-target="tw-input"][type="number"]',
       'input[inputmode="numeric"]',
       '[data-test-selector*="prediction"] input',
       '#channel-points-reward-center-body input',
@@ -87,6 +99,53 @@
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
+  function getCustomOutcomeControls() {
+    const body = getRewardCenterBody();
+    if (!body) return [];
+
+    const wrappers = Array.from(
+      body.querySelectorAll(
+        '.custom-prediction-button, [class*="custom-prediction-button"]'
+      )
+    ).filter(isVisible);
+
+    const controls = wrappers
+      .map((wrapper) => {
+        const input = wrapper.querySelector('input[data-a-target="tw-input"][type="number"], input[type="number"]');
+        const voteButton = wrapper.querySelector("button");
+        if (!input || !voteButton || !isVisible(input) || !isVisible(voteButton)) return null;
+
+        const voteText = (voteButton.textContent || "").toLowerCase();
+        if (!voteText.includes("vote")) return null;
+
+        return { input, voteButton };
+      })
+      .filter(Boolean);
+
+    return controls;
+  }
+
+  async function ensureCustomModeAndGetControls() {
+    for (let attempt = 0; attempt < 16; attempt += 1) {
+      const controls = getCustomOutcomeControls();
+      if (controls.length >= 2) {
+        return controls;
+      }
+
+      const customToggle = getCustomModeToggleButton();
+      if (customToggle && isVisible(customToggle) && (attempt === 0 || attempt % 3 === 0)) {
+        click(customToggle);
+        if (attempt === 0) {
+          T.log("Opened custom amount mode.");
+        }
+      }
+
+      await T.sleep(120);
+    }
+
+    return [];
+  }
+
   async function waitForCustomBetControls() {
     for (let attempt = 0; attempt < 10; attempt += 1) {
       const input = findCustomAmountInput();
@@ -127,31 +186,12 @@
     T.runtime.betInFlight = true;
 
     try {
-      const { blueButton, pinkButton } = T.getPredictionButtons();
-      const targetButton = outcomeId === "0" ? blueButton : pinkButton;
-      if (!targetButton) {
-        T.log("Outcome button not found for", outcomeId);
-        return false;
-      }
+      const controls = await ensureCustomModeAndGetControls();
+      const outcomeIndex = outcomeId === "0" ? 0 : 1;
+      const target = controls[outcomeIndex] ?? null;
 
-      if (!click(targetButton)) {
-        T.log("Failed to click outcome button.");
-        return false;
-      }
-
-      await T.sleep(120);
-
-      const customToggle = document.querySelector(
-        '[data-test-selector="prediction-checkout-active-footer__input-type-toggle"]'
-      );
-      if (customToggle) {
-        click(customToggle);
-        T.log(`Opened custom amount entry for ${amount} (${sourceLabel}).`);
-      }
-
-      const { input, confirmButton } = await waitForCustomBetControls();
-
-      if (input && confirmButton) {
+      if (target?.input && target?.voteButton) {
+        const { input, voteButton } = target;
         input.focus();
         setNativeInputValue(input, amount);
         if (T.parsePoints(input.value) !== amount) {
@@ -160,26 +200,14 @@
         }
         input.dispatchEvent(new Event("blur", { bubbles: true }));
         await T.sleep(80);
-        click(confirmButton);
+        click(voteButton);
         T.log(`Predicted ${amount} via ${sourceLabel} using custom amount.`);
         return true;
       }
 
-      if (sourceLabel === "manual") {
-        T.log(
-          `Manual bet cancelled: could not open custom amount input for ${amount}. No default quick-bet was placed.`
-        );
-        return false;
-      }
-
-      if (amount >= 10) {
-        T.log(
-          `Custom amount UI did not appear in time; Twitch likely fell back to quick bet. Intended amount: ${amount}.`
-        );
-        return true;
-      }
-
-      T.log("Unable to place bet: missing custom controls and target amount < fixed minimum.");
+      T.log(
+        `Unable to place ${amount}: custom controls were not available for outcome ${outcomeId}. No quick-bet fallback used.`
+      );
       return false;
     } finally {
       T.runtime.betInFlight = false;
@@ -212,6 +240,8 @@
   T.findCustomAmountInput = findCustomAmountInput;
   T.findConfirmButton = findConfirmButton;
   T.setNativeInputValue = setNativeInputValue;
+  T.getCustomOutcomeControls = getCustomOutcomeControls;
+  T.ensureCustomModeAndGetControls = ensureCustomModeAndGetControls;
   T.waitForCustomBetControls = waitForCustomBetControls;
   T.executeBet = executeBet;
   T.manualBet = manualBet;
