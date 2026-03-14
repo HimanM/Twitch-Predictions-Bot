@@ -34,13 +34,17 @@
 
 ### One-Click Install
 
-[![Install on Tampermonkey](https://img.shields.io/badge/Install-Tampermonkey-brightgreen?logo=tampermonkey)](https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/main/twitch-predictions.user.js)
+[![Install on Tampermonkey](https://img.shields.io/badge/Install-Tampermonkey-brightgreen?logo=tampermonkey)](https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/twitch-predictions.user.js)
 
 Direct install link:
 
-`https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/main/twitch-predictions.user.js`
+`https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/twitch-predictions.user.js`
 
-If Tampermonkey is installed, opening this link should immediately show the install prompt.
+Fallback install link (GitHub raw view):
+
+`https://github.com/HimanM/Twitch-Predictions-Bot/blob/master/twitch-predictions.user.js?raw=1`
+
+If Tampermonkey is installed, opening either link should show the install prompt.
 
 ### Manual Install
 
