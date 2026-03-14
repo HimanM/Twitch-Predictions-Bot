@@ -14,7 +14,18 @@
     const style = document.createElement("style");
     style.id = "tpred-style";
     style.textContent = `
-      #tpred-root { position: relative; margin-right: .5rem; }
+      #tpred-root {
+        position: relative;
+        margin-right: .5rem;
+        --tpred-accent: #9147ff;
+        --tpred-panel-bg: rgba(24, 24, 27, .96);
+        --tpred-surface: rgba(36, 36, 42, .9);
+        --tpred-surface-2: rgba(43, 43, 50, .88);
+        --tpred-border: rgba(255, 255, 255, .12);
+        --tpred-border-strong: rgba(255, 255, 255, .2);
+        --tpred-text: #efeff1;
+        --tpred-text-muted: #adadb8;
+      }
       .tpred-panel {
         position: absolute;
         right: 0;
@@ -24,27 +35,43 @@
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        background: var(--color-background-base);
-        border: 1px solid var(--color-border-base);
-        border-radius: var(--border-radius-medium);
+        background: radial-gradient(120% 100% at 100% 0%, rgba(145, 71, 255, .12) 0%, rgba(24, 24, 27, .96) 48%), var(--tpred-panel-bg);
+        border: 1px solid var(--tpred-border-strong);
+        border-radius: 14px;
         z-index: 999999;
-        padding: .75rem;
-        box-shadow: 0 8px 24px rgba(0,0,0,.35);
+        padding: .8rem;
+        box-shadow: 0 14px 34px rgba(0,0,0,.46), 0 0 0 1px rgba(145, 71, 255, .12) inset;
+        backdrop-filter: blur(6px);
       }
       .tpred-hidden { display: none; }
-      .tpred-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: .5rem; gap: .5rem; }
+      .tpred-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: .65rem;
+        padding-bottom: .55rem;
+        border-bottom: 1px solid var(--tpred-border);
+        gap: .5rem;
+      }
       .tpred-header-left { display: flex; flex-direction: column; gap: .2rem; }
       .tpred-header-actions { display: flex; align-items: center; gap: .35rem; }
       .tpred-header-btn {
-        min-height: 28px;
+        min-height: 30px;
         padding: 0 .7rem;
-        border-radius: var(--border-radius-small);
+        border-radius: 999px;
         font-size: 12px;
+        background: var(--tpred-surface);
+        border: 1px solid var(--tpred-border);
+        color: var(--tpred-text);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
       }
       .tpred-body {
         display: grid;
         grid-template-columns: 280px minmax(0, 1fr);
-        gap: .75rem;
+        gap: .85rem;
         align-items: stretch;
         flex: 1;
         min-height: 0;
@@ -54,7 +81,7 @@
         max-height: none;
         min-height: 0;
         overflow: auto;
-        padding-right: .1rem;
+        padding-right: .2rem;
         padding-bottom: .7rem;
       }
       .tpred-logs-pane {
@@ -64,37 +91,89 @@
         overflow: auto;
         display: flex;
         flex-direction: column;
-        border-right: 1px solid rgba(255,255,255,.06);
+        border-right: 1px solid var(--tpred-border);
+        background: linear-gradient(180deg, rgba(32, 32, 37, .62), rgba(28, 28, 32, .18));
+        border-radius: 10px;
+        padding: .45rem .75rem .7rem .55rem;
         padding-right: .75rem;
         padding-bottom: .7rem;
       }
       .tpred-logs-pane.tpred-hidden-pane {
         display: none;
       }
-      .tpred-caption { color: var(--color-text-alt-2); font-size: 12px; line-height: 1.2; }
-      .tpred-row { margin: .35rem 0; }
+      .tpred-caption { color: var(--tpred-text-muted); font-size: 12px; line-height: 1.2; }
+      .tpred-row { margin: .42rem 0; }
+      .tpred-settings-divider {
+        height: 1px;
+        margin: .58rem 0;
+        background: linear-gradient(90deg, rgba(255,255,255,.22), rgba(255,255,255,.08));
+      }
       .tpred-inline { display: flex; gap: .5rem; align-items: center; }
-      .tpred-inline > label { min-width: 130px; color: var(--color-text-alt-2); font-size: 12px; }
+      .tpred-inline > label { min-width: 136px; color: var(--tpred-text-muted); font-size: 12px; }
+      .tpred-input-wrap {
+        display: inline-flex;
+        align-items: stretch;
+        gap: .35rem;
+      }
       .tpred-inline input {
-        width: 140px;
-        height: 30px;
-        border: 1px solid var(--color-border-input, #3b3b44);
-        border-radius: 6px;
-        background: var(--color-background-input, #18181b);
-        color: var(--color-text-input, var(--color-text-base));
+        width: 132px;
+        height: 32px;
+        border: 1px solid var(--tpred-border);
+        border-radius: 8px;
+        background: var(--tpred-surface);
+        color: var(--tpred-text);
         padding: 0 .55rem;
         outline: none;
         transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
       }
       .tpred-inline input:hover {
-        border-color: #6d6d7a;
+        border-color: rgba(255, 255, 255, .28);
       }
       .tpred-inline input:focus {
-        border-color: #9147ff;
-        box-shadow: 0 0 0 2px rgba(145, 71, 255, .22);
+        border-color: var(--tpred-accent);
+        box-shadow: 0 0 0 2px rgba(145, 71, 255, .24);
       }
       .tpred-inline input::placeholder {
         color: var(--color-text-alt-2);
+      }
+      .tpred-inline input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+      }
+      .tpred-inline input[type="number"]::-webkit-outer-spin-button,
+      .tpred-inline input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      .tpred-stepper {
+        display: inline-flex;
+        align-items: stretch;
+        border: 1px solid rgba(145, 71, 255, .52);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 0 0 1px rgba(145, 71, 255, .14) inset;
+      }
+      .tpred-step-btn {
+        width: 26px;
+        height: 32px;
+        border: 0;
+        background: linear-gradient(180deg, rgba(169,112,255,.34), rgba(145,71,255,.26));
+        color: #f3ecff;
+        padding: 0;
+        line-height: 1;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .tpred-step-btn + .tpred-step-btn {
+        border-left: 1px solid rgba(145, 71, 255, .52);
+      }
+      .tpred-step-btn:hover {
+        background: linear-gradient(180deg, rgba(175,120,255,.5), rgba(151,77,255,.4));
+        color: #fff;
       }
       .tpred-segment-row {
         display: flex;
@@ -105,16 +184,16 @@
       }
       .tpred-segment-label {
         min-width: 130px;
-        color: var(--color-text-alt-2);
+        color: var(--tpred-text-muted);
         font-size: 12px;
       }
       .tpred-segment {
         display: inline-flex;
         align-items: center;
-        border: 1px solid var(--color-border-input, #3b3b44);
+        border: 1px solid var(--tpred-border-strong);
         border-radius: 8px;
         overflow: hidden;
-        background: var(--color-background-input, #18181b);
+        background: var(--tpred-surface);
       }
       .tpred-segment-btn {
         min-width: 88px;
@@ -122,7 +201,7 @@
         padding: 0 .7rem;
         border: 0;
         background: transparent;
-        color: var(--color-text-alt-2);
+        color: var(--tpred-text-muted);
         font-size: 12px;
         font-weight: 600;
         cursor: pointer;
@@ -132,12 +211,12 @@
         border-left: 1px solid rgba(255,255,255,.08);
       }
       .tpred-segment-btn.tpred-active {
-        background: #9147ff;
+        background: linear-gradient(180deg, #a970ff, #9147ff);
         color: #fff;
       }
       .tpred-segment-btn:not(.tpred-active):hover {
-        background: rgba(255,255,255,.06);
-        color: var(--color-text-base);
+        background: rgba(255,255,255,.08);
+        color: var(--tpred-text);
       }
       .tpred-toggle {
         display: inline-flex;
@@ -149,17 +228,17 @@
         border-radius: var(--border-radius-small);
         transition: background .15s ease;
       }
-      .tpred-toggle:hover { background: var(--color-background-alt-2); }
+      .tpred-toggle:hover { background: rgba(255, 255, 255, .06); }
       .tpred-toggle input[type="checkbox"] {
         width: 18px;
         height: 18px;
         margin: 0;
         appearance: none;
         -webkit-appearance: none;
-        border: 2px solid var(--color-border-input);
+        border: 2px solid var(--tpred-border-strong);
         border-radius: 4px;
         position: relative;
-        background: var(--color-background-input);
+        background: var(--tpred-surface);
         transition: border-color .15s ease, background .15s ease, box-shadow .15s ease, transform .12s ease;
       }
       .tpred-toggle input[type="checkbox"]::before {
@@ -177,8 +256,8 @@
         transition: transform .12s ease-in-out, opacity .12s ease-in-out;
       }
       .tpred-toggle input[type="checkbox"]:checked {
-        background: #9147ff;
-        border-color: #9147ff;
+        background: var(--tpred-accent);
+        border-color: var(--tpred-accent);
         box-shadow: 0 0 0 2px rgba(145, 71, 255, .28);
       }
       .tpred-toggle input[type="checkbox"]:checked::before {
@@ -186,7 +265,7 @@
         opacity: 1;
       }
       .tpred-toggle input[type="checkbox"]:active { transform: scale(.96); }
-      .tpred-toggle span { color: var(--color-text-base); font-size: 13px; }
+      .tpred-toggle span { color: var(--tpred-text); font-size: 13px; }
       .tpred-native-btn { flex: 1; }
       .tpred-native-btn .ScCoreButtonLabel-sc-s7h2b7-0 { display: inline-flex; align-items: center; gap: .35rem; }
       .tpred-native-btn:hover { filter: brightness(1.06); }
@@ -201,10 +280,10 @@
       }
       #tpred-status {
         margin-bottom: .5rem;
-        padding: .55rem;
-        border: 1px solid var(--color-border-input);
-        border-radius: var(--border-radius-small);
-        background: linear-gradient(180deg, var(--color-background-base), var(--color-background-alt));
+        padding: .62rem;
+        border: 1px solid var(--tpred-border-strong);
+        border-radius: 10px;
+        background: linear-gradient(180deg, rgba(39, 39, 46, .84), rgba(31, 31, 37, .84));
       }
       .tpred-status-grid {
         display: grid;
@@ -212,24 +291,26 @@
         gap: .35rem;
       }
       .tpred-status-item {
-        background: var(--color-background-alt-2);
-        border: 1px solid var(--color-border-base);
-        border-radius: var(--border-radius-small);
-        padding: .32rem .4rem;
+        background: var(--tpred-surface-2);
+        border: 1px solid var(--tpred-border);
+        border-radius: 8px;
+        padding: .35rem .44rem;
       }
       .tpred-status-label {
         display: block;
-        color: var(--color-text-alt-2);
+        color: var(--tpred-text-muted);
         font-size: 10px;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: .04em;
+        letter-spacing: .05em;
       }
       .tpred-status-value {
         display: block;
-        color: var(--color-text-base);
-        font-size: 12px;
-        margin-top: .1rem;
-        font-weight: 600;
+        color: var(--tpred-text);
+        font-size: 15px;
+        margin-top: .16rem;
+        font-weight: 700;
+        letter-spacing: .01em;
       }
       .tpred-status-flags {
         margin-top: .45rem;
@@ -238,10 +319,11 @@
         gap: .35rem;
       }
       .tpred-flag {
-        padding: .14rem .45rem;
+        padding: .16rem .5rem;
         border-radius: 999px;
         font-size: 11px;
-        border: 1px solid var(--color-border-base);
+        border: 1px solid var(--tpred-border);
+        background: rgba(255,255,255,.04);
       }
       .tpred-flag-on {
         background: rgba(14, 122, 62, .18);
@@ -252,16 +334,17 @@
         border-color: rgba(224, 58, 62, .4);
       }
       .tpred-reason {
-        margin-top: .45rem;
-        font-size: 12px;
-        color: var(--color-text-alt-2);
+        margin-top: .52rem;
+        font-size: 13px;
+        color: var(--tpred-text-muted);
+        line-height: 1.35;
       }
       .tpred-prediction {
-        border: 1px solid var(--color-border-base);
-        border-radius: var(--border-radius-small);
+        border: 1px solid var(--tpred-border);
+        border-radius: 10px;
         padding: .5rem;
         margin: .5rem 0;
-        background: var(--color-background-alt);
+        background: linear-gradient(180deg, rgba(44, 44, 50, .75), rgba(33, 33, 39, .75));
       }
       .tpred-outcome { display: flex; justify-content: space-between; font-size: .9rem; margin: .15rem 0; }
       .tpred-subtitle { margin-top: .65rem; margin-bottom: .35rem; font-weight: 600; }
@@ -288,14 +371,31 @@
         font-family: monospace;
         font-size: 12px;
         line-height: 1.35;
-        background: var(--color-background-body);
-        border: 1px solid var(--color-border-base);
-        border-radius: var(--border-radius-small);
+        background: rgba(13, 13, 16, .9);
+        border: 1px solid var(--tpred-border);
+        border-radius: 10px;
         min-height: 220px;
         overflow: auto;
-        padding: .35rem;
+        padding: .45rem;
         white-space: pre-wrap;
         flex: 1;
+      }
+      .tpred-main::-webkit-scrollbar,
+      .tpred-logs-pane::-webkit-scrollbar,
+      .tpred-logs::-webkit-scrollbar {
+        width: 8px;
+      }
+      .tpred-main::-webkit-scrollbar-thumb,
+      .tpred-logs-pane::-webkit-scrollbar-thumb,
+      .tpred-logs::-webkit-scrollbar-thumb {
+        background: rgba(169, 112, 255, .45);
+        border-radius: 999px;
+      }
+      .tpred-main::-webkit-scrollbar-track,
+      .tpred-logs-pane::-webkit-scrollbar-track,
+      .tpred-logs::-webkit-scrollbar-track {
+        background: rgba(255,255,255,.06);
+        border-radius: 999px;
       }
       .tpred-logs-footer {
         margin-top: .45rem;
@@ -313,7 +413,7 @@
       .tpred-oss-note {
         margin-top: .45rem;
         text-align: center;
-        color: #bb8cff;
+        color: #bf94ff;
         font-size: 11px;
         line-height: 1.35;
         opacity: .92;
@@ -328,7 +428,7 @@
         margin-top: .35rem;
       }
       .tpred-bet-name {
-        color: #bb8cff;
+        color: #c8a4ff;
         text-align: center;
         font-size: clamp(11px, 1.1vw, 14px);
         font-weight: 600;
@@ -341,20 +441,21 @@
       #tpred-bet-0,
       #tpred-bet-1 {
         border: 1px solid transparent;
+        border-radius: 999px;
       }
       #tpred-bet-0 {
-        background: rgba(56, 122, 255, .16);
-        border-color: rgba(56, 122, 255, .55);
+        background: linear-gradient(180deg, rgba(74, 139, 255, .34), rgba(43, 101, 217, .28));
+        border-color: rgba(86, 145, 255, .62);
       }
       #tpred-bet-0:hover {
-        background: rgba(56, 122, 255, .24);
+        background: linear-gradient(180deg, rgba(74, 139, 255, .44), rgba(43, 101, 217, .36));
       }
       #tpred-bet-1 {
-        background: rgba(245, 0, 155, .16);
-        border-color: rgba(245, 0, 155, .55);
+        background: linear-gradient(180deg, rgba(255, 73, 187, .34), rgba(215, 35, 147, .28));
+        border-color: rgba(255, 96, 196, .6);
       }
       #tpred-bet-1:hover {
-        background: rgba(245, 0, 155, .24);
+        background: linear-gradient(180deg, rgba(255, 73, 187, .44), rgba(215, 35, 147, .36));
       }
       #tpred-github { text-decoration: none; }
       @media (max-width: 900px) {
@@ -420,7 +521,7 @@
         <div class="tpred-header">
           <div class="tpred-header-left">
             <p class="CoreText-sc-1txzju1-0 ScTitleText-sc-d9mj2s-0 bqyYtA lbYztg tw-title">Prediction Bot</p>
-            <p class="CoreText-sc-1txzju1-0 tpred-caption">Underdog strategy + live monitor</p>
+            <p class="CoreText-sc-1txzju1-0 tpred-caption">Underdog strategy</p>
           </div>
           <div class="tpred-header-actions">
             <a id="tpred-github" href="https://github.com/HimanM" target="_blank" rel="noopener noreferrer" class="ScCoreButton-sc-ocjdkq-0 glPhvE ScButtonIcon-sc-9yap0r-0 dgVYJo" aria-label="Open GitHub">
@@ -456,9 +557,11 @@
           </div>
           <div id="tpred-main" class="tpred-main">
             <div id="tpred-status" class="CoreText-sc-1txzju1-0"></div>
+            <div class="tpred-settings-divider" aria-hidden="true"></div>
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-enabled" type="checkbox"> <span>Enable Auto-Bet</span></label></div>
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-dry-run" type="checkbox"> <span>Dry Run (No bet clicks)</span></label></div>
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-force-min-on-skip" type="checkbox"> <span>Disable Skip (bet Auto Min on skips)</span></label></div>
+            <div class="tpred-settings-divider" aria-hidden="true"></div>
             <div class="tpred-segment-row">
               <span class="tpred-segment-label">Strategy Mode</span>
               <div id="tpred-strategy-mode" class="tpred-segment" role="group" aria-label="Strategy Mode">
@@ -466,28 +569,61 @@
                 <button id="tpred-strategy-dynamic" class="tpred-segment-btn" type="button" data-mode="dynamic">Dynamic</button>
               </div>
             </div>
+            <div class="tpred-settings-divider" aria-hidden="true"></div>
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-auto-popover" type="checkbox"> <span>Auto Open Channel Points</span></label></div>
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-auto-details" type="checkbox"> <span>Auto Open Prediction Details</span></label></div>
+            <div class="tpred-settings-divider" aria-hidden="true"></div>
             <div class="tpred-row tpred-inline">
               <label>Discovery Probe (ms)</label>
-              <input id="tpred-discovery-ms" type="number" min="5000" step="1000" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
+              <div class="tpred-input-wrap">
+                <input id="tpred-discovery-ms" type="number" min="5000" step="1000" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
+                <div class="tpred-stepper">
+                  <button class="tpred-step-btn" type="button" data-target="tpred-discovery-ms" data-dir="down">-</button>
+                  <button class="tpred-step-btn" type="button" data-target="tpred-discovery-ms" data-dir="up">+</button>
+                </div>
+              </div>
             </div>
             <div class="tpred-row tpred-inline">
               <label>Active Eval (ms)</label>
-              <input id="tpred-eval-ms" type="number" min="1000" step="250" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
+              <div class="tpred-input-wrap">
+                <input id="tpred-eval-ms" type="number" min="1000" step="250" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
+                <div class="tpred-stepper">
+                  <button class="tpred-step-btn" type="button" data-target="tpred-eval-ms" data-dir="down">-</button>
+                  <button class="tpred-step-btn" type="button" data-target="tpred-eval-ms" data-dir="up">+</button>
+                </div>
+              </div>
             </div>
             <div class="tpred-row tpred-inline">
               <label>Manual Amount</label>
-              <input id="tpred-manual-amount" type="number" min="1" step="1" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
+              <div class="tpred-input-wrap">
+                <input id="tpred-manual-amount" type="number" min="1" step="1" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
+                <div class="tpred-stepper">
+                  <button class="tpred-step-btn" type="button" data-target="tpred-manual-amount" data-dir="down">-</button>
+                  <button class="tpred-step-btn" type="button" data-target="tpred-manual-amount" data-dir="up">+</button>
+                </div>
+              </div>
             </div>
             <div class="tpred-row tpred-inline">
               <label>Auto Min Bet</label>
-              <input id="tpred-auto-min-bet" type="number" min="1" step="1" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
+              <div class="tpred-input-wrap">
+                <input id="tpred-auto-min-bet" type="number" min="1" step="1" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
+                <div class="tpred-stepper">
+                  <button class="tpred-step-btn" type="button" data-target="tpred-auto-min-bet" data-dir="down">-</button>
+                  <button class="tpred-step-btn" type="button" data-target="tpred-auto-min-bet" data-dir="up">+</button>
+                </div>
+              </div>
             </div>
             <div class="tpred-row tpred-inline">
               <label>Auto Max Bet</label>
-              <input id="tpred-auto-max-bet" type="number" min="1" step="1" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
+              <div class="tpred-input-wrap">
+                <input id="tpred-auto-max-bet" type="number" min="1" step="1" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
+                <div class="tpred-stepper">
+                  <button class="tpred-step-btn" type="button" data-target="tpred-auto-max-bet" data-dir="down">-</button>
+                  <button class="tpred-step-btn" type="button" data-target="tpred-auto-max-bet" data-dir="up">+</button>
+                </div>
+              </div>
             </div>
+            <div class="tpred-settings-divider" aria-hidden="true"></div>
             <div id="tpred-prediction" class="tpred-prediction"></div>
             <div class="tpred-bet-names">
               <div id="tpred-bet-name-0" class="tpred-bet-name">Outcome A</div>
@@ -589,6 +725,29 @@
       T.settings.logsVisible = !T.settings.logsVisible;
       T.saveSettings();
       renderUi();
+    });
+
+    root.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (!target.classList.contains("tpred-step-btn")) return;
+
+      const inputId = target.dataset?.target;
+      const dir = target.dataset?.dir === "down" ? -1 : 1;
+      if (!inputId) return;
+
+      const input = root.querySelector(`#${inputId}`);
+      if (!(input instanceof HTMLInputElement)) return;
+
+      const step = Number(input.step) || 1;
+      const min = Number(input.min);
+      const hasMin = !Number.isNaN(min);
+      const current = Number(input.value);
+      const base = Number.isNaN(current) ? (hasMin ? min : 0) : current;
+      let next = base + (step * dir);
+      if (hasMin) next = Math.max(min, next);
+      input.value = String(Math.round(next));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
     });
 
     if (T.runtime.ui.toggleEnabled) T.runtime.ui.toggleEnabled.checked = T.settings.enabled;
