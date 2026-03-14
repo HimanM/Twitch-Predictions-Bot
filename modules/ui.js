@@ -481,6 +481,21 @@
       renderUi();
     });
 
+    if (T.runtime.ui.outsideClickHandler) {
+      document.removeEventListener("mousedown", T.runtime.ui.outsideClickHandler, true);
+    }
+    T.runtime.ui.outsideClickHandler = (event) => {
+      if (!T.settings.panelOpen) return;
+      if (!T.runtime.ui.root) return;
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (T.runtime.ui.root.contains(target)) return;
+      T.settings.panelOpen = false;
+      T.saveSettings();
+      renderUi();
+    };
+    document.addEventListener("mousedown", T.runtime.ui.outsideClickHandler, true);
+
     T.runtime.ui.clearLogs?.addEventListener("click", () => {
       T.runtime.logs = [];
       T.runtime.lastLogByKey = Object.create(null);
