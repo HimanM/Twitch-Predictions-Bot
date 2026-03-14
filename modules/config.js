@@ -47,10 +47,13 @@
     ui: {
       root: null,
       panel: null,
+      panelMain: null,
+      logsPane: null,
       status: null,
       prediction: null,
       logs: null,
       clearLogs: null,
+      toggleLogs: null,
       manualAmount: null,
       autoMinBet: null,
       autoMaxBet: null,
@@ -75,6 +78,7 @@
       evalIntervalMs: T.CONFIG.EVAL_INTERVAL_MS,
       autoMinBet: 1,
       autoMaxBet: T.CONFIG.MAX_BET,
+      logsVisible: true,
       panelOpen: false,
       manualAmount: 100,
     };

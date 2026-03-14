@@ -19,9 +19,9 @@
         position: absolute;
         right: 0;
         top: 2.75rem;
-        width: 380px;
+        width: 760px;
         max-height: 70vh;
-        overflow: auto;
+        overflow: hidden;
         background: var(--color-background-base);
         border: 1px solid var(--color-border-base);
         border-radius: var(--border-radius-medium);
@@ -33,6 +33,30 @@
       .tpred-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: .5rem; gap: .5rem; }
       .tpred-header-left { display: flex; flex-direction: column; gap: .2rem; }
       .tpred-header-actions { display: flex; align-items: center; gap: .35rem; }
+      .tpred-body {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        gap: .75rem;
+        align-items: start;
+      }
+      .tpred-main {
+        min-width: 0;
+        max-height: calc(70vh - 68px);
+        overflow: auto;
+        padding-right: .1rem;
+      }
+      .tpred-logs-pane {
+        min-width: 0;
+        max-height: calc(70vh - 68px);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid rgba(255,255,255,.06);
+        padding-right: .75rem;
+      }
+      .tpred-logs-pane.tpred-hidden-pane {
+        display: none;
+      }
       .tpred-caption { color: var(--color-text-alt-2); font-size: 12px; line-height: 1.2; }
       .tpred-row { margin: .35rem 0; }
       .tpred-inline { display: flex; gap: .5rem; align-items: center; }
@@ -185,11 +209,17 @@
       .tpred-outcome { display: flex; justify-content: space-between; font-size: .9rem; margin: .15rem 0; }
       .tpred-subtitle { margin-top: .65rem; margin-bottom: .35rem; font-weight: 600; }
       .tpred-logs-header {
-        margin-top: .65rem;
+        margin-top: 0;
         margin-bottom: .35rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: .35rem;
+      }
+      .tpred-logs-actions {
+        display: flex;
+        align-items: center;
+        gap: .35rem;
       }
       .tpred-clear-btn {
         min-height: 26px;
@@ -208,11 +238,36 @@
         overflow: auto;
         padding: .35rem;
         white-space: pre-wrap;
+        flex: 1;
       }
       .tpred-log-line { margin: .2rem 0; }
       #tpred-github { text-decoration: none; }
+      @media (max-width: 900px) {
+        .tpred-panel { width: min(96vw, 760px); right: -8px; }
+      }
+      @media (max-width: 700px) {
+        .tpred-panel {
+          width: min(96vw, 420px);
+          right: -8px;
+          overflow: auto;
+        }
+        .tpred-body {
+          grid-template-columns: 1fr;
+        }
+        .tpred-main,
+        .tpred-logs-pane {
+          max-height: none;
+          overflow: visible;
+        }
+        .tpred-logs-pane {
+          border-right: 0;
+          border-bottom: 1px solid rgba(255,255,255,.06);
+          padding-right: 0;
+          padding-bottom: .6rem;
+          margin-bottom: .1rem;
+        }
+      }
       @media (max-width: 620px) {
-        .tpred-panel { width: min(94vw, 380px); right: -8px; }
         .tpred-status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       }
     `;
@@ -265,60 +320,69 @@
             <button id="tpred-close" class="ScCoreButton-sc-ocjdkq-0 glPhvE ScButtonIcon-sc-9yap0r-0 dgVYJo" aria-label="Close panel">✕</button>
           </div>
         </div>
-        <div id="tpred-status" class="CoreText-sc-1txzju1-0"></div>
-        <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-enabled" type="checkbox"> <span>Enable Auto-Bet</span></label></div>
-        <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-dry-run" type="checkbox"> <span>Dry Run (No bet clicks)</span></label></div>
-        <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-force-min-on-skip" type="checkbox"> <span>Disable Skip (bet Auto Min on skips)</span></label></div>
-        <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-auto-popover" type="checkbox"> <span>Auto Open Channel Points</span></label></div>
-        <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-auto-details" type="checkbox"> <span>Auto Open Prediction Details</span></label></div>
-        <div class="tpred-row tpred-inline">
-          <label>Discovery Probe (ms)</label>
-          <input id="tpred-discovery-ms" type="number" min="5000" step="1000" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
-        </div>
-        <div class="tpred-row tpred-inline">
-          <label>Active Eval (ms)</label>
-          <input id="tpred-eval-ms" type="number" min="1000" step="250" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
-        </div>
-        <div class="tpred-row tpred-inline">
-          <label>Manual Amount</label>
-          <input id="tpred-manual-amount" type="number" min="1" step="1" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
-        </div>
-        <div class="tpred-row tpred-inline">
-          <label>Auto Min Bet</label>
-          <input id="tpred-auto-min-bet" type="number" min="1" step="1" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
-        </div>
-        <div class="tpred-row tpred-inline">
-          <label>Auto Max Bet</label>
-          <input id="tpred-auto-max-bet" type="number" min="1" step="1" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
-        </div>
-        <div id="tpred-prediction" class="tpred-prediction"></div>
-        <div class="tpred-row tpred-inline">
-          <button id="tpred-bet-0" class="ScCoreButton-sc-ocjdkq-0 yezmM tpred-native-btn">
-            <div class="ScCoreButtonLabel-sc-s7h2b7-0 OyGFd">
-              <div data-a-target="tw-core-button-label-text" class="Layout-sc-1xcs6mc-0 iBachR">Predict A</div>
-              <div class="ScCoreButtonIcon-sc-ypak37-0 gcsIzP tw-core-button-icon">
-                <div class="ScSvgWrapper-sc-wkgzod-0 kccyMt tw-svg" data-a-selector="tw-core-button-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 5v2a5 5 0 0 1 5 5h2a7 7 0 0 0-7-7Z"></path><path fill-rule="evenodd" d="M1 12C1 5.925 5.925 1 12 1s11 4.925 11 11-4.925 11-11 11S1 18.075 1 12Zm11 9a9 9 0 1 1 0-18 9 9 0 0 1 0 18Z" clip-rule="evenodd"></path></svg>
-                </div>
+        <div class="tpred-body">
+          <div id="tpred-logs-pane" class="tpred-logs-pane">
+            <div class="tpred-logs-header">
+              <div class="tpred-subtitle CoreText-sc-1txzju1-0">Logs</div>
+              <div class="tpred-logs-actions">
+                <button id="tpred-toggle-logs" class="ScCoreButton-sc-ocjdkq-0 glPhvE tpred-clear-btn" type="button">Hide</button>
+                <button id="tpred-clear-logs" class="ScCoreButton-sc-ocjdkq-0 glPhvE tpred-clear-btn" type="button">Clear</button>
               </div>
             </div>
-          </button>
-          <button id="tpred-bet-1" class="ScCoreButton-sc-ocjdkq-0 yezmM tpred-native-btn">
-            <div class="ScCoreButtonLabel-sc-s7h2b7-0 OyGFd">
-              <div data-a-target="tw-core-button-label-text" class="Layout-sc-1xcs6mc-0 iBachR">Predict B</div>
-              <div class="ScCoreButtonIcon-sc-ypak37-0 gcsIzP tw-core-button-icon">
-                <div class="ScSvgWrapper-sc-wkgzod-0 kccyMt tw-svg" data-a-selector="tw-core-button-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 5v2a5 5 0 0 1 5 5h2a7 7 0 0 0-7-7Z"></path><path fill-rule="evenodd" d="M1 12C1 5.925 5.925 1 12 1s11 4.925 11 11-4.925 11-11 11S1 18.075 1 12Zm11 9a9 9 0 1 1 0-18 9 9 0 0 1 0 18Z" clip-rule="evenodd"></path></svg>
-                </div>
-              </div>
+            <div id="tpred-logs" class="tpred-logs"></div>
+          </div>
+          <div id="tpred-main" class="tpred-main">
+            <div id="tpred-status" class="CoreText-sc-1txzju1-0"></div>
+            <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-enabled" type="checkbox"> <span>Enable Auto-Bet</span></label></div>
+            <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-dry-run" type="checkbox"> <span>Dry Run (No bet clicks)</span></label></div>
+            <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-force-min-on-skip" type="checkbox"> <span>Disable Skip (bet Auto Min on skips)</span></label></div>
+            <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-auto-popover" type="checkbox"> <span>Auto Open Channel Points</span></label></div>
+            <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-auto-details" type="checkbox"> <span>Auto Open Prediction Details</span></label></div>
+            <div class="tpred-row tpred-inline">
+              <label>Discovery Probe (ms)</label>
+              <input id="tpred-discovery-ms" type="number" min="5000" step="1000" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
             </div>
-          </button>
+            <div class="tpred-row tpred-inline">
+              <label>Active Eval (ms)</label>
+              <input id="tpred-eval-ms" type="number" min="1000" step="250" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
+            </div>
+            <div class="tpred-row tpred-inline">
+              <label>Manual Amount</label>
+              <input id="tpred-manual-amount" type="number" min="1" step="1" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
+            </div>
+            <div class="tpred-row tpred-inline">
+              <label>Auto Min Bet</label>
+              <input id="tpred-auto-min-bet" type="number" min="1" step="1" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
+            </div>
+            <div class="tpred-row tpred-inline">
+              <label>Auto Max Bet</label>
+              <input id="tpred-auto-max-bet" type="number" min="1" step="1" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
+            </div>
+            <div id="tpred-prediction" class="tpred-prediction"></div>
+            <div class="tpred-row tpred-inline">
+              <button id="tpred-bet-0" class="ScCoreButton-sc-ocjdkq-0 yezmM tpred-native-btn">
+                <div class="ScCoreButtonLabel-sc-s7h2b7-0 OyGFd">
+                  <div data-a-target="tw-core-button-label-text" class="Layout-sc-1xcs6mc-0 iBachR">Predict A</div>
+                  <div class="ScCoreButtonIcon-sc-ypak37-0 gcsIzP tw-core-button-icon">
+                    <div class="ScSvgWrapper-sc-wkgzod-0 kccyMt tw-svg" data-a-selector="tw-core-button-icon">
+                      <svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 5v2a5 5 0 0 1 5 5h2a7 7 0 0 0-7-7Z"></path><path fill-rule="evenodd" d="M1 12C1 5.925 5.925 1 12 1s11 4.925 11 11-4.925 11-11 11S1 18.075 1 12Zm11 9a9 9 0 1 1 0-18 9 9 0 0 1 0 18Z" clip-rule="evenodd"></path></svg>
+                    </div>
+                  </div>
+                </div>
+              </button>
+              <button id="tpred-bet-1" class="ScCoreButton-sc-ocjdkq-0 yezmM tpred-native-btn">
+                <div class="ScCoreButtonLabel-sc-s7h2b7-0 OyGFd">
+                  <div data-a-target="tw-core-button-label-text" class="Layout-sc-1xcs6mc-0 iBachR">Predict B</div>
+                  <div class="ScCoreButtonIcon-sc-ypak37-0 gcsIzP tw-core-button-icon">
+                    <div class="ScSvgWrapper-sc-wkgzod-0 kccyMt tw-svg" data-a-selector="tw-core-button-icon">
+                      <svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 5v2a5 5 0 0 1 5 5h2a7 7 0 0 0-7-7Z"></path><path fill-rule="evenodd" d="M1 12C1 5.925 5.925 1 12 1s11 4.925 11 11-4.925 11-11 11S1 18.075 1 12Zm11 9a9 9 0 1 1 0-18 9 9 0 0 1 0 18Z" clip-rule="evenodd"></path></svg>
+                    </div>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="tpred-logs-header">
-          <div class="tpred-subtitle CoreText-sc-1txzju1-0">Logs</div>
-          <button id="tpred-clear-logs" class="ScCoreButton-sc-ocjdkq-0 glPhvE tpred-clear-btn" type="button">Clear</button>
-        </div>
-        <div id="tpred-logs" class="tpred-logs"></div>
       </div>
     `;
 
@@ -326,10 +390,13 @@
 
     T.runtime.ui.root = root;
     T.runtime.ui.panel = root.querySelector("#tpred-panel");
+    T.runtime.ui.panelMain = root.querySelector("#tpred-main");
+    T.runtime.ui.logsPane = root.querySelector("#tpred-logs-pane");
     T.runtime.ui.status = root.querySelector("#tpred-status");
     T.runtime.ui.prediction = root.querySelector("#tpred-prediction");
     T.runtime.ui.logs = root.querySelector("#tpred-logs");
     T.runtime.ui.clearLogs = root.querySelector("#tpred-clear-logs");
+    T.runtime.ui.toggleLogs = root.querySelector("#tpred-toggle-logs");
     T.runtime.ui.manualAmount = root.querySelector("#tpred-manual-amount");
     T.runtime.ui.autoMinBet = root.querySelector("#tpred-auto-min-bet");
     T.runtime.ui.autoMaxBet = root.querySelector("#tpred-auto-max-bet");
@@ -356,6 +423,12 @@
     T.runtime.ui.clearLogs?.addEventListener("click", () => {
       T.runtime.logs = [];
       T.runtime.lastLogByKey = Object.create(null);
+      renderUi();
+    });
+
+    T.runtime.ui.toggleLogs?.addEventListener("click", () => {
+      T.settings.logsVisible = !T.settings.logsVisible;
+      T.saveSettings();
       renderUi();
     });
 
@@ -481,6 +554,13 @@
     if (!T.runtime.ui.root) return;
 
     T.runtime.ui.panel.classList.toggle("tpred-hidden", !T.settings.panelOpen);
+    T.runtime.ui.logsPane?.classList.toggle("tpred-hidden-pane", !T.settings.logsVisible);
+    if (T.runtime.ui.panel) {
+      T.runtime.ui.panel.style.width = T.settings.logsVisible ? "760px" : "460px";
+    }
+    if (T.runtime.ui.toggleLogs) {
+      T.runtime.ui.toggleLogs.textContent = T.settings.logsVisible ? "Hide" : "Show";
+    }
 
     const st = T.runtime.latestState;
     const pending = T.runtime.pendingDecision;
