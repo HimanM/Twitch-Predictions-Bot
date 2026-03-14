@@ -50,15 +50,15 @@
 
 ### One-Click Install
 
-[![Install on Tampermonkey](https://img.shields.io/badge/Install-Tampermonkey-brightgreen?logo=tampermonkey)](https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/feat/modularize/twitch-predictions.user.js)
+[![Install on Tampermonkey](https://img.shields.io/badge/Install-Tampermonkey-brightgreen?logo=tampermonkey)](https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/twitch-predictions.user.js)
 
 Direct install URL:
 
-`https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/feat/modularize/twitch-predictions.user.js`
+`https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/twitch-predictions.user.js`
 
 Fallback raw URL:
 
-`https://github.com/HimanM/Twitch-Predictions-Bot/blob/feat/modularize/twitch-predictions.user.js?raw=1`
+`https://github.com/HimanM/Twitch-Predictions-Bot/blob/master/twitch-predictions.user.js?raw=1`
 
 ### Manual Install
 
