@@ -259,7 +259,13 @@
     runtime.ui.toggleEnabled.addEventListener("change", () => {
       settings.enabled = runtime.ui.toggleEnabled.checked;
       saveSettings();
-      log(`Auto-Bet ${settings.enabled ? "enabled" : "disabled"}.`);
+      if (settings.enabled) {
+        startAutomationPolling();
+        log("Auto-Bet enabled. Discovery polling resumed.");
+      } else {
+        stopAutomationPolling();
+        log("Auto-Bet disabled. Stopped active loops and discovery polling.");
+      }
     });
 
     runtime.ui.toggleDryRun.addEventListener("change", () => {
@@ -914,6 +920,23 @@
     }
   }
 
+  function stopAutomationPolling() {
+    clearIntervals();
+    if (runtime.discoveryIntervalId) {
+      clearInterval(runtime.discoveryIntervalId);
+      runtime.discoveryIntervalId = null;
+    }
+    runtime.discoveryPending = false;
+  }
+
+  function startAutomationPolling() {
+    const state = readPredictionState();
+    if (state?.status === "ACTIVE") {
+      startLoopsIfNeeded();
+    }
+    startDiscoveryLoop();
+  }
+
   function evaluate() {
     ensureUi();
     ensurePredictionUiOpen();
@@ -1098,7 +1121,11 @@
   ensureUi();
   setInterval(ensureUi, 3000);
   setupObserver();
-  startLoopsIfNeeded();
-  startDiscoveryLoop();
+  if (settings.enabled) {
+    startLoopsIfNeeded();
+    startDiscoveryLoop();
+  } else {
+    log("Auto-Bet is disabled in settings. Polling is paused.");
+  }
   log("Script initialized.");
 })();
