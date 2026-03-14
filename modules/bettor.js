@@ -15,6 +15,10 @@
     return true;
   }
 
+  function isVisible(el) {
+    return Boolean(el && el.offsetParent !== null);
+  }
+
   function findCustomAmountInput() {
     // Fallback heuristics: Twitch UI can switch between fixed amount chips and custom input.
     const candidates = [
@@ -31,13 +35,44 @@
     return null;
   }
 
-  function findConfirmButton() {
+  function isQuickAmountButton(btn) {
+    const txt = (btn.textContent || "").trim().toLowerCase().replace(/\s+/g, " ");
+    if (!txt) return false;
+    if (/^\d+([.,]\d+)?\s*[km]?$/i.test(txt)) return true;
+    if (/^\d+\s*(point|points|channel points)$/i.test(txt)) return true;
+    if (txt.includes("custom amount") || txt.includes("predict with custom")) return true;
+    return false;
+  }
+
+  function findConfirmButton(input) {
     const buttons = Array.from(document.querySelectorAll("#channel-points-reward-center-body button"));
+    const visibleButtons = buttons.filter((btn) => isVisible(btn));
+
+    const rankedButtons = visibleButtons
+      .filter((btn) => {
+        const txt = (btn.textContent || "").trim().toLowerCase();
+        if (!txt) return false;
+        if (btn.disabled || btn.getAttribute("aria-disabled") === "true") return false;
+        if (isQuickAmountButton(btn)) return false;
+        return txt.includes("place") || txt.includes("confirm") || txt.includes("submit") || txt.includes("predict");
+      })
+      .map((btn) => {
+        const txt = (btn.textContent || "").trim().toLowerCase();
+        const relationScore = input && (input.compareDocumentPosition(btn) & Node.DOCUMENT_POSITION_FOLLOWING) ? 0 : 100;
+        const verbScore = txt.includes("place") || txt.includes("confirm") || txt.includes("submit") ? 0 : 10;
+        return { btn, score: relationScore + verbScore };
+      })
+      .sort((a, b) => a.score - b.score);
+
+    if (rankedButtons.length > 0) {
+      return rankedButtons[0].btn;
+    }
+
     for (const btn of buttons) {
       const txt = (btn.textContent || "").trim().toLowerCase();
       if (!txt) continue;
       if (btn.disabled || btn.getAttribute("aria-disabled") === "true") continue;
-      if (txt.includes("custom amount") || txt.includes("predict with custom")) continue;
+      if (isQuickAmountButton(btn)) continue;
       if (txt.includes("predict") || txt.includes("place") || txt.includes("confirm") || txt.includes("submit")) {
         return btn;
       }
@@ -55,7 +90,7 @@
   async function waitForCustomBetControls() {
     for (let attempt = 0; attempt < 10; attempt += 1) {
       const input = findCustomAmountInput();
-      const confirmButton = findConfirmButton();
+      const confirmButton = findConfirmButton(input);
       if (input && confirmButton) {
         return { input, confirmButton };
       }
@@ -117,12 +152,14 @@
       const { input, confirmButton } = await waitForCustomBetControls();
 
       if (input && confirmButton) {
+        input.focus();
         setNativeInputValue(input, amount);
         if (T.parsePoints(input.value) !== amount) {
           await T.sleep(60);
           setNativeInputValue(input, amount);
         }
-        await T.sleep(60);
+        input.dispatchEvent(new Event("blur", { bubbles: true }));
+        await T.sleep(80);
         click(confirmButton);
         T.log(`Predicted ${amount} via ${sourceLabel} using custom amount.`);
         return true;

@@ -68,7 +68,7 @@
     const state = T.readPredictionState();
     if (state?.status === "ACTIVE") {
       startLoopsIfNeeded();
-      logChanged("modeSwitch", "Active prediction detected. Switched to 5s monitoring mode.");
+      logChanged("modeSwitch", "Active prediction detected. Switched to active monitoring mode.");
       return;
     }
     startDiscoveryLoop();
@@ -154,6 +154,7 @@
         return;
       }
 
+      clearIntervals();
       const success = await T.placeBet(decision);
       if (success) {
         T.runtime.lastPlacedBet = {
@@ -164,7 +165,6 @@
         };
         T.runtime.placedForPredictionKey = key;
       }
-      clearIntervals();
       if (T.settings.enabled) {
         restartDiscoveryLoop();
       }
@@ -265,6 +265,7 @@
 
     T.runtime.observer = new MutationObserver(() => {
       if (!T.settings.enabled) return;
+      if (T.runtime.evalIntervalId || T.runtime.watchIntervalId) return;
       T.ensureUi();
       const state = T.readPredictionState();
       if (state?.status === "ACTIVE") {
