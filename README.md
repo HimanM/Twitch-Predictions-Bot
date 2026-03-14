@@ -1,15 +1,61 @@
 <div align="center">
-  <img src="pics/UNDERDOG_TW_PRED_ICON.png" width="96" alt="Twitch Prediction Bot Icon" />
+  <a href="https://www.twitch.tv/" target="_blank" rel="noreferrer">
+    <img src="pics/UNDERDOG_TW_PRED_ICON.png" width="96" alt="Twitch Prediction Bot Icon" />
+  </a>
   <h1>Twitch Prediction Auto-Bet (Underdog)</h1>
   <p>
     A modular Tampermonkey userscript that monitors Twitch Predictions,
     evaluates live underdog odds, and places bets near close with a configurable
     in-page control panel.
   </p>
-  <img src="https://img.shields.io/badge/Tampermonkey-Compatible-brightgreen?logo=tampermonkey" alt="Tampermonkey" />
-  <img src="https://img.shields.io/badge/License-MIT-blue" alt="MIT License" />
-  <img src="https://img.shields.io/badge/Platform-Twitch-9146ff?logo=twitch" alt="Twitch" />
+  <p>
+    <a href="https://www.tampermonkey.net/" target="_blank" rel="noreferrer">
+      <img src="https://img.shields.io/badge/Tampermonkey-Compatible-brightgreen?logo=tampermonkey" alt="Tampermonkey" />
+    </a>
+    <a href="https://opensource.org/license/mit" target="_blank" rel="noreferrer">
+      <img src="https://img.shields.io/badge/License-MIT-blue" alt="MIT License" />
+    </a>
+    <a href="https://www.twitch.tv/" target="_blank" rel="noreferrer">
+      <img src="https://img.shields.io/badge/Platform-Twitch-9146ff?logo=twitch" alt="Twitch" />
+    </a>
+  </p>
 </div>
+
+---
+
+## Installation (Tampermonkey)
+
+### One-Click Install
+
+[![Install on Tampermonkey](https://img.shields.io/badge/Install-Tampermonkey-brightgreen?logo=tampermonkey)](https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/twitch-predictions.user.js)
+
+Direct install URL:
+
+`https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/twitch-predictions.user.js`
+
+Fallback raw URL:
+
+`https://github.com/HimanM/Twitch-Predictions-Bot/blob/master/twitch-predictions.user.js?raw=1`
+
+### Manual Install
+
+1. Install Tampermonkey in your browser.
+2. Create a new userscript.
+3. Replace template content with `twitch-predictions.user.js` from this repo.
+4. Save and enable.
+5. Open Twitch and click the bot icon in top nav.
+
+> [!NOTE]
+> The userscript stores its panel settings in `localStorage` under `tpred.settings.v1`.
+
+> [!TIP]
+> Start with **Dry Run** enabled first so you can confirm the script is reading prediction state correctly before allowing real bets.
+
+> [!WARNING]
+> Twitch can change its DOM at any time. If the UI stops responding after a Twitch update, inspect the logs before trusting automated placement.
+
+> [!CAUTION]
+> This script performs automated UI interaction on your Twitch account. Use conservative limits and only run it if you understand that risk.
 
 ---
 
@@ -43,30 +89,6 @@
 | **Dry Run Mode** | Simulates actions without placing real clicks |
 | **Persistent Settings** | Saved in `localStorage` (`tpred.settings.v1`) |
 | **Duplicate Guard** | At most one auto placement per prediction key |
-
----
-
-## Installation (Tampermonkey)
-
-### One-Click Install
-
-[![Install on Tampermonkey](https://img.shields.io/badge/Install-Tampermonkey-brightgreen?logo=tampermonkey)](https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/twitch-predictions.user.js)
-
-Direct install URL:
-
-`https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/master/twitch-predictions.user.js`
-
-Fallback raw URL:
-
-`https://github.com/HimanM/Twitch-Predictions-Bot/blob/master/twitch-predictions.user.js?raw=1`
-
-### Manual Install
-
-1. Install Tampermonkey in your browser.
-2. Create a new userscript.
-3. Replace template content with `twitch-predictions.user.js` from this repo.
-4. Save and enable.
-5. Open Twitch and click the bot icon in top nav.
 
 ---
 
@@ -132,6 +154,32 @@ The side with fewer pooled points is treated as underdog.
 If `amount < autoMinBet`, strategy returns skip.
 
 When **Disable Skip** is enabled, skip decisions can be converted to a forced min-sized bet (subject to max and wallet caps).
+
+### Worked Example
+
+If your settings are:
+
+- `Auto Min Bet = 1`
+- `Auto Max Bet = 1000`
+- `Available Points = 800`
+
+And the live pool is:
+
+- `Outcome A = 10000`
+- `Outcome B = 10`
+
+Then the bot evaluates it like this:
+
+1. `B` is the underdog because `10 < 10000`.
+2. `ratio = 10000 / 10 = 1000`, so it hits the `100:1+` tier.
+3. The tier base amount is `500`.
+4. The final bet becomes `min(500, 1000, 800, floor(800 * 0.5))`.
+5. `floor(800 * 0.5) = 400`, so the final amount is `400`.
+
+Result: the bot bets `400` on `B`, not `500` and not `1000`, because the 50% wallet cap is stricter.
+
+> [!IMPORTANT]
+> `Auto Max Bet` is only a ceiling. It does not force the bot to spend that amount.
 
 ---
 
