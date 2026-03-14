@@ -1,108 +1,120 @@
-# Twitch Prediction Auto-Bet Userscript
+# Twitch Prediction Auto-Bet (Underdog)
 
-This project includes a Tampermonkey userscript that:
+Tampermonkey userscript for Twitch Predictions with a native-feeling top-nav control panel.
 
-- Opens the Channel Points popover automatically
-- Clicks the prediction list card to open prediction details automatically
-- Detects Twitch predictions in the channel points/reward center UI
-- Re-evaluates odds every 5 seconds while prediction is active
-- Stores a global pending decision
-- Places a bet at T-5 seconds using the latest decision
-- Skips betting when region restrictions are detected
+It monitors prediction odds, keeps a pending decision updated, and can auto-place a bet near close (T-5 seconds) using an underdog strategy with hard safety caps.
+
+## What It Does
+
+- Injects a top-nav control panel (toggle, live status, logs, manual bet buttons).
+- Detects prediction availability from Twitch Channel Points UI.
+- Optionally auto-opens the Channel Points popover and prediction details.
+- Re-evaluates odds continuously during active predictions.
+- Places one auto-bet at T-5s using the latest decision.
+- Skips when region-restricted, already voted, or data is not reliable.
 
 ## Files
 
-- `algorithm.js`: algorithm and DOM reader helpers
-- `twitch-predictions.user.js`: installable Tampermonkey userscript
-- `plan.md`: implementation notes and selector mapping
+- `twitch-predictions.user.js`: main installable userscript.
+- `algorithm.js`: standalone algorithm helpers and tests.
+- `plan.md`: implementation notes and selector strategy.
 
-## Strategy Summary
+## Quick Install (Tampermonkey)
 
-- Bet on the **underdog** (lower points side)
-- Recompute every 5 seconds while timer > 5s
-- Execute once when timer <= 5s
-- Tiered amount based on favorite:underdog ratio
-- Never exceed:
-  - 1000 points hard cap
-  - 50% of available channel points
-
-Tier table:
-
-- ratio >= 100: 500 points
-- ratio >= 20: 400 points
-- ratio >= 10: 300 points
-- ratio >= 5: 200 points
-- ratio >= 2: 100 points
-- ratio < 2: skip
-
-## Install On Tampermonkey
-
-1. Install Tampermonkey extension in your browser.
+1. Install Tampermonkey in your browser.
 2. Open Tampermonkey dashboard.
-3. Click `Create a new script...`.
-4. Remove default template content.
-5. Copy full content from `twitch-predictions.user.js` and paste.
-6. Save the script (Ctrl+S).
-7. Ensure script is enabled.
-8. Open a Twitch channel page (`https://www.twitch.tv/<channel>`).
+3. Create a new script.
+4. Replace the default template with contents of `twitch-predictions.user.js`.
+5. Save and enable.
+6. Open any Twitch channel page: `https://www.twitch.tv/<channel>`.
 
-## How It Works At Runtime
+## Control Panel Settings
 
-1. A `MutationObserver` watches for UI changes on Twitch.
-2. Script ensures navigation path automatically:
-   - Click Channel Points button (wallet icon)
-   - Click prediction list item card
-   - Open prediction details view
-3. Two timers run:
-   - Evaluation loop every 5000ms updates `pendingDecision`
-   - Watch loop every 250ms checks timer for T-5 execution
-4. At T-5 seconds:
-   - Script uses latest pending decision
-   - Selects blue/pink outcome button
-   - Attempts custom amount path:
-     - click `Predict with Custom Amount`
-     - fill numeric input
-     - click confirm/predict button
-   - Falls back to fixed quick-button path when custom controls are unavailable
+- Enable Auto-Bet: master automation switch.
+- Dry Run: logs intended action without placing clicks.
+- Auto Open Channel Points: opens wallet/popover when needed.
+- Auto Open Prediction Details: opens the prediction detail view.
+- Discovery Probe (ms): how often to check for new predictions while idle.
+- Manual Amount: value used by Predict A / Predict B manual buttons.
 
-## Key Selectors
+Notes:
 
-- Channel Points balance: `[data-test-selector="copo-balance-string"] span`
-- Prediction list card: `.predictions-list-item`
-- Prediction detail root: `#channel-points-reward-center-body`
-- Active timer text: `.prediction-checkout-details-header p:nth-of-type(2)`
-- Outcome buttons:
-  - `.spectator-prediction-button--blue` or `.fixedPredictionButton--jEmiF.blue--z7K6N`
-  - `.spectator-prediction-button--pink` or `.fixedPredictionButton--jEmiF.pink--TRx6x`
-- Region block message:
-  - `[data-test-selector="prediction-checkout-active-footer__region-restriction-message"]`
-- Already voted marker:
-  - `[data-test-selector="user-prediction-string__outcome-title"]`
+- Discovery Probe is clamped to 5000-300000 ms.
+- Settings persist via `localStorage` key `tpred.settings.v1`.
 
-## Region Restriction Handling
+## Strategy (Underdog)
 
-If Twitch shows:
+- Chooses the lower pooled outcome.
+- Recomputes every 5000 ms while active.
+- Executes once when timer is <= 5 seconds.
+- Tiered size by favorite:underdog ratio:
 
-- `[data-test-selector="prediction-checkout-active-footer__region-restriction-message"]`
+| Ratio (favorite:underdog) | Bet |
+| --- | ---: |
+| >= 100 | 500 |
+| >= 20 | 400 |
+| >= 10 | 300 |
+| >= 5 | 200 |
+| >= 2 | 100 |
+| < 2 | Skip |
 
-the script treats available points as 0 and skips betting.
+Safety caps:
+
+- Hard max: 1000 points.
+- Soft wallet cap: max 50% of currently available points.
+- If available points read as 0, skip.
+
+## Runtime Flow
+
+1. Observer + periodic probe discover prediction UI changes.
+2. Script opens required UI path when auto-open toggles are enabled.
+3. Evaluation loop updates `pendingDecision`.
+4. Watch loop checks timer and fires once at trigger window.
+5. Script records the prediction key to avoid duplicate placement.
+
+## Selector Approach
+
+The script prioritizes stable markers first:
+
+- `data-test-selector` attributes.
+- Semantic icon classes (for channel points and prediction buttons).
+- ARIA labels and nearby text fallback.
+
+Important selectors used:
+
+- Balance: `[data-test-selector="copo-balance-string"] span`
+- List card: `.predictions-list-item`
+- Reward center root: `#channel-points-reward-center-body`
+- Region restriction message:
+  `[data-test-selector="prediction-checkout-active-footer__region-restriction-message"]`
+- Already-voted marker:
+  `[data-test-selector="user-prediction-string__outcome-title"]`
 
 ## Debugging
 
-Open browser devtools console and filter for:
+- Open browser DevTools Console.
+- Filter logs by: `[TwitchPred]`
 
-- `[TwitchPred]`
+You should see:
 
-You can see decision updates, trigger timing, and placement logs.
+- discovery events
+- odds/timer updates
+- pending decision updates
+- auto/manual bet attempts and outcomes
 
-## Notes / Limitations
+## Known Limitations
 
-- Twitch UI is dynamic; class hashes change frequently.
-- Script intentionally prefers stable selectors (`data-test-selector`, aria-labels, semantic class fragments).
-- In some active layouts, custom amount + confirm controls may not render immediately; script includes a quick-button fallback.
+- Twitch UI is dynamic and can change without notice.
+- Confirm/custom-amount controls can vary by layout and render timing.
+- Fallback click path may place a fixed quick amount when custom controls are missing.
 
-## Safety
+## Safety and Behavior Guarantees
 
-- Script places at most one bet per detected prediction key.
-- Script does not retry repeatedly after failed placement.
-- Script skips if odds data is incomplete or zero on one side.
+- One auto-placement max per prediction key.
+- No spam retries after a failed placement path.
+- Skip behavior for locked/resolved/canceled states.
+- Skip when odds data is incomplete (e.g., one side is 0).
+
+## Legal and Risk Notice
+
+This script is unofficial and not affiliated with Twitch. Use at your own risk. Automated interactions may violate platform expectations or terms in some contexts.
