@@ -259,6 +259,17 @@
         opacity: .9;
         filter: drop-shadow(0 2px 6px rgba(145, 71, 255, .22));
       }
+      .tpred-oss-note {
+        margin-top: .45rem;
+        text-align: center;
+        color: #bb8cff;
+        font-size: 11px;
+        line-height: 1.35;
+        opacity: .92;
+      }
+      .tpred-oss-note p {
+        margin: 0;
+      }
       .tpred-bet-names {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -385,6 +396,11 @@
             <div id="tpred-logs" class="tpred-logs"></div>
             <div class="tpred-logs-footer">
               <img src="https://i.ibb.co/gbWGc64j/UNDERDOG-TW-PRED.png" alt="Underdog" />
+            </div>
+            <div class="tpred-oss-note">
+              <p>Open-source Twitch Predictions assistant.</p>
+              <p>Underdog strategy with live monitor and auto-bet tools.</p>
+              <p>Author: HimanM</p>
             </div>
           </div>
           <div id="tpred-main" class="tpred-main">
