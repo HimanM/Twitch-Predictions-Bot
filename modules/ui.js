@@ -190,33 +190,39 @@
       .tpred-segment {
         display: inline-flex;
         align-items: center;
-        border: 1px solid var(--tpred-border-strong);
+        border: 1px solid rgba(145, 71, 255, .52);
         border-radius: 8px;
         overflow: hidden;
-        background: var(--tpred-surface);
+        background: rgba(145, 71, 255, .14);
+        box-shadow: 0 0 0 1px rgba(145, 71, 255, .14) inset;
       }
       .tpred-segment-btn {
-        min-width: 88px;
-        height: 30px;
-        padding: 0 .7rem;
+        min-width: 96px;
+        height: 32px;
+        padding: 0;
         border: 0;
-        background: transparent;
-        color: var(--tpred-text-muted);
+        background: linear-gradient(180deg, rgba(169,112,255,.24), rgba(145,71,255,.18));
+        color: #e8d8ff;
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
         transition: background .15s ease, color .15s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        text-align: center;
       }
       .tpred-segment-btn + .tpred-segment-btn {
-        border-left: 1px solid rgba(255,255,255,.08);
+        border-left: 1px solid rgba(145, 71, 255, .52);
       }
       .tpred-segment-btn.tpred-active {
-        background: linear-gradient(180deg, #a970ff, #9147ff);
+        background: linear-gradient(180deg, rgba(175,120,255,.55), rgba(151,77,255,.45));
         color: #fff;
       }
       .tpred-segment-btn:not(.tpred-active):hover {
-        background: rgba(255,255,255,.08);
-        color: var(--tpred-text);
+        background: linear-gradient(180deg, rgba(169,112,255,.38), rgba(145,71,255,.3));
+        color: #fff;
       }
       .tpred-toggle {
         display: inline-flex;
