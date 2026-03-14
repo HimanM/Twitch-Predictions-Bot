@@ -33,6 +33,12 @@
       .tpred-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: .5rem; gap: .5rem; }
       .tpred-header-left { display: flex; flex-direction: column; gap: .2rem; }
       .tpred-header-actions { display: flex; align-items: center; gap: .35rem; }
+      .tpred-header-btn {
+        min-height: 28px;
+        padding: 0 .7rem;
+        border-radius: var(--border-radius-small);
+        font-size: 12px;
+      }
       .tpred-body {
         display: grid;
         grid-template-columns: 280px minmax(0, 1fr);
@@ -317,6 +323,7 @@
                 </div>
               </div>
             </a>
+            <button id="tpred-toggle-logs" class="ScCoreButton-sc-ocjdkq-0 glPhvE tpred-header-btn" type="button">Hide Logs</button>
             <button id="tpred-close" class="ScCoreButton-sc-ocjdkq-0 glPhvE ScButtonIcon-sc-9yap0r-0 dgVYJo" aria-label="Close panel">✕</button>
           </div>
         </div>
@@ -325,7 +332,6 @@
             <div class="tpred-logs-header">
               <div class="tpred-subtitle CoreText-sc-1txzju1-0">Logs</div>
               <div class="tpred-logs-actions">
-                <button id="tpred-toggle-logs" class="ScCoreButton-sc-ocjdkq-0 glPhvE tpred-clear-btn" type="button">Hide</button>
                 <button id="tpred-clear-logs" class="ScCoreButton-sc-ocjdkq-0 glPhvE tpred-clear-btn" type="button">Clear</button>
               </div>
             </div>
@@ -392,6 +398,7 @@
     T.runtime.ui.panel = root.querySelector("#tpred-panel");
     T.runtime.ui.panelMain = root.querySelector("#tpred-main");
     T.runtime.ui.logsPane = root.querySelector("#tpred-logs-pane");
+    T.runtime.ui.panelBody = root.querySelector(".tpred-body");
     T.runtime.ui.status = root.querySelector("#tpred-status");
     T.runtime.ui.prediction = root.querySelector("#tpred-prediction");
     T.runtime.ui.logs = root.querySelector("#tpred-logs");
@@ -555,11 +562,14 @@
 
     T.runtime.ui.panel.classList.toggle("tpred-hidden", !T.settings.panelOpen);
     T.runtime.ui.logsPane?.classList.toggle("tpred-hidden-pane", !T.settings.logsVisible);
+    if (T.runtime.ui.panelBody) {
+      T.runtime.ui.panelBody.style.gridTemplateColumns = T.settings.logsVisible ? "280px minmax(0, 1fr)" : "minmax(0, 1fr)";
+    }
     if (T.runtime.ui.panel) {
       T.runtime.ui.panel.style.width = T.settings.logsVisible ? "760px" : "460px";
     }
     if (T.runtime.ui.toggleLogs) {
-      T.runtime.ui.toggleLogs.textContent = T.settings.logsVisible ? "Hide" : "Show";
+      T.runtime.ui.toggleLogs.textContent = T.settings.logsVisible ? "Hide Logs" : "Show Logs";
     }
 
     const st = T.runtime.latestState;
