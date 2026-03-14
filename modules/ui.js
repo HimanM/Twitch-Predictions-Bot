@@ -22,6 +22,8 @@
         width: 760px;
         max-height: calc(100vh - 84px);
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
         background: var(--color-background-base);
         border: 1px solid var(--color-border-base);
         border-radius: var(--border-radius-medium);
@@ -43,18 +45,22 @@
         display: grid;
         grid-template-columns: 280px minmax(0, 1fr);
         gap: .75rem;
-        align-items: start;
+        align-items: stretch;
+        flex: 1;
+        min-height: 0;
       }
       .tpred-main {
         min-width: 0;
-        max-height: calc(100vh - 190px);
+        max-height: none;
+        min-height: 0;
         overflow: auto;
         padding-right: .1rem;
         padding-bottom: .7rem;
       }
       .tpred-logs-pane {
         min-width: 0;
-        max-height: calc(100vh - 190px);
+        max-height: none;
+        min-height: 0;
         overflow: auto;
         display: flex;
         flex-direction: column;
@@ -731,9 +737,28 @@
     const panel = T.runtime.ui.panel;
     if (!panel) return;
 
+    if (window.innerWidth <= 700) {
+      panel.style.height = "";
+      panel.style.maxHeight = "";
+      if (T.runtime.ui.panelBody) {
+        T.runtime.ui.panelBody.style.height = "";
+        T.runtime.ui.panelBody.style.maxHeight = "";
+      }
+      if (T.runtime.ui.panelMain) {
+        T.runtime.ui.panelMain.style.height = "";
+        T.runtime.ui.panelMain.style.maxHeight = "";
+      }
+      if (T.runtime.ui.logsPane) {
+        T.runtime.ui.logsPane.style.height = "";
+        T.runtime.ui.logsPane.style.maxHeight = "";
+      }
+      return;
+    }
+
     const rect = panel.getBoundingClientRect();
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 900;
     const availableHeight = Math.max(360, Math.floor(viewportHeight - rect.top - 12));
+    panel.style.height = `${availableHeight}px`;
     panel.style.maxHeight = `${availableHeight}px`;
 
     const header = panel.querySelector(".tpred-header");
@@ -741,12 +766,15 @@
     const bodyHeight = Math.max(220, availableHeight - headerHeight - 26);
 
     if (T.runtime.ui.panelBody) {
+      T.runtime.ui.panelBody.style.height = `${bodyHeight}px`;
       T.runtime.ui.panelBody.style.maxHeight = `${bodyHeight}px`;
     }
     if (T.runtime.ui.panelMain) {
+      T.runtime.ui.panelMain.style.height = `${bodyHeight}px`;
       T.runtime.ui.panelMain.style.maxHeight = `${bodyHeight}px`;
     }
     if (T.runtime.ui.logsPane) {
+      T.runtime.ui.logsPane.style.height = `${bodyHeight}px`;
       T.runtime.ui.logsPane.style.maxHeight = `${bodyHeight}px`;
     }
   }
