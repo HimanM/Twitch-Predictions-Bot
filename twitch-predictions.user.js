@@ -48,6 +48,7 @@
   const runtime = {
     pendingDecision: null,
     latestState: null,
+    lastPlacedBet: null,
     evalIntervalId: null,
     watchIntervalId: null,
     discoveryIntervalId: null,
@@ -57,6 +58,8 @@
     lastOpenAttemptAt: 0,
     lastDetailsAttemptAt: 0,
     lastStateSignature: "",
+    lastDiscoveryStatusSignature: "",
+    lastLogByKey: Object.create(null),
     logs: [],
     ui: {
       root: null,
@@ -84,6 +87,15 @@
     if (runtime.logs.length > 120) runtime.logs.length = 120;
     console.log(LOG_PREFIX, ...args);
     renderUi();
+  }
+
+  function logChanged(key, ...args) {
+    const msg = args
+      .map((a) => (typeof a === "string" ? a : JSON.stringify(a)))
+      .join(" ");
+    if (runtime.lastLogByKey[key] === msg) return;
+    runtime.lastLogByKey[key] = msg;
+    log(...args);
   }
 
   function loadSettings() {
@@ -247,7 +259,13 @@
     runtime.ui.toggleEnabled.addEventListener("change", () => {
       settings.enabled = runtime.ui.toggleEnabled.checked;
       saveSettings();
-      log(`Auto-Bet ${settings.enabled ? "enabled" : "disabled"}.`);
+      if (settings.enabled) {
+        startAutomationPolling();
+        log("Auto-Bet enabled. Discovery polling resumed.");
+      } else {
+        stopAutomationPolling();
+        log("Auto-Bet disabled. Stopped active loops and discovery polling.");
+      }
     });
 
     runtime.ui.toggleDryRun.addEventListener("change", () => {
@@ -333,6 +351,15 @@
       .tpred-native-btn { flex: 1; }
       .tpred-native-btn .ScCoreButtonLabel-sc-s7h2b7-0 { display: inline-flex; align-items: center; gap: .35rem; }
       .tpred-native-btn:hover { filter: brightness(1.06); }
+      .tpred-native-btn.tpred-bot-pending {
+        border-color: #0e7a3e;
+        box-shadow: inset 0 0 0 1px rgba(14,122,62,.45), 0 0 0 1px rgba(14,122,62,.35);
+      }
+      .tpred-native-btn.tpred-bot-placed {
+        border-color: #1f69ff;
+        box-shadow: inset 0 0 0 1px rgba(31,105,255,.5), 0 0 0 1px rgba(31,105,255,.45);
+        filter: brightness(1.04);
+      }
       #tpred-status {
         margin-bottom: .4rem;
         padding: .4rem .5rem;
@@ -385,19 +412,43 @@
 
     if (st) {
       const [a, b] = st.outcomes;
+      const predictionKey = makePredictionKey(st);
+      const botPending = pending?.shouldBet ? pending : null;
+      const botPlaced = runtime.lastPlacedBet?.predictionKey === predictionKey
+        ? runtime.lastPlacedBet
+        : null;
+
+      const btn0 = runtime.ui.root.querySelector("#tpred-bet-0");
+      const btn1 = runtime.ui.root.querySelector("#tpred-bet-1");
       const btn0Label = runtime.ui.root.querySelector("#tpred-bet-0 [data-a-target='tw-core-button-label-text']");
       const btn1Label = runtime.ui.root.querySelector("#tpred-bet-1 [data-a-target='tw-core-button-label-text']");
-      if (btn0Label) btn0Label.textContent = `Predict ${a.title}`;
-      if (btn1Label) btn1Label.textContent = `Predict ${b.title}`;
+
+      const pendingText0 = botPending?.outcomeId === "0" ? `  BOT ${botPending.amount}` : "";
+      const pendingText1 = botPending?.outcomeId === "1" ? `  BOT ${botPending.amount}` : "";
+      const placedText0 = botPlaced?.outcomeId === "0" ? `  BET ${botPlaced.amount}` : "";
+      const placedText1 = botPlaced?.outcomeId === "1" ? `  BET ${botPlaced.amount}` : "";
+
+      if (btn0Label) btn0Label.textContent = `Predict ${a.title}${placedText0 || pendingText0}`;
+      if (btn1Label) btn1Label.textContent = `Predict ${b.title}${placedText1 || pendingText1}`;
+
+      btn0?.classList.toggle("tpred-bot-pending", botPending?.outcomeId === "0");
+      btn1?.classList.toggle("tpred-bot-pending", botPending?.outcomeId === "1");
+      btn0?.classList.toggle("tpred-bot-placed", botPlaced?.outcomeId === "0");
+      btn1?.classList.toggle("tpred-bot-placed", botPlaced?.outcomeId === "1");
+
       runtime.ui.prediction.innerHTML = `
         <div class="tpred-outcome"><span>${a.title}</span><span>${a.totalPoints}</span></div>
         <div class="tpred-outcome"><span>${b.title}</span><span>${b.totalPoints}</span></div>
       `;
     } else {
+      const btn0 = runtime.ui.root.querySelector("#tpred-bet-0");
+      const btn1 = runtime.ui.root.querySelector("#tpred-bet-1");
       const btn0Label = runtime.ui.root.querySelector("#tpred-bet-0 [data-a-target='tw-core-button-label-text']");
       const btn1Label = runtime.ui.root.querySelector("#tpred-bet-1 [data-a-target='tw-core-button-label-text']");
       if (btn0Label) btn0Label.textContent = "Predict A";
       if (btn1Label) btn1Label.textContent = "Predict B";
+      btn0?.classList.remove("tpred-bot-pending", "tpred-bot-placed");
+      btn1?.classList.remove("tpred-bot-pending", "tpred-bot-placed");
       runtime.ui.prediction.innerHTML = `<div class="CoreText-sc-1txzju1-0">No prediction state detected.</div>`;
     }
 
@@ -430,7 +481,7 @@
     const t = (text ?? "").toLowerCase();
     if (t.includes("closing in")) return "ACTIVE";
     if (t.includes("closed") || t.includes("waiting for result")) return "LOCKED";
-    if (t.includes("resolved") || t.includes("winner")) return "RESOLVED";
+    if (t.includes("resolved") || t.includes("winner") || t.includes("ended")) return "RESOLVED";
     if (t.includes("cancel")) return "CANCELED";
     if (/\d/.test(t)) return "ACTIVE";
     return "UNKNOWN";
@@ -543,13 +594,16 @@
     return Boolean(document.querySelector('[data-test-selector="user-prediction-string__outcome-title"]'));
   }
 
-  function closeRewardCenterPanel() {
+  function closeRewardCenterPanel(options) {
+    const silent = Boolean(options?.silent);
     const closeBtn = document.querySelector(
       '#channel-points-reward-center-body button[aria-label="Close"], button[aria-label="Close"]'
     );
     if (closeBtn) {
       click(closeBtn);
-      log("Closed reward center panel.");
+      if (!silent) {
+        logChanged("closePanel", "Closed reward center panel.");
+      }
       return true;
     }
     return false;
@@ -866,6 +920,23 @@
     }
   }
 
+  function stopAutomationPolling() {
+    clearIntervals();
+    if (runtime.discoveryIntervalId) {
+      clearInterval(runtime.discoveryIntervalId);
+      runtime.discoveryIntervalId = null;
+    }
+    runtime.discoveryPending = false;
+  }
+
+  function startAutomationPolling() {
+    const state = readPredictionState();
+    if (state?.status === "ACTIVE") {
+      startLoopsIfNeeded();
+    }
+    startDiscoveryLoop();
+  }
+
   function evaluate() {
     ensureUi();
     ensurePredictionUiOpen();
@@ -939,6 +1010,12 @@
 
       const success = placeBet(decision);
       if (success) {
+        runtime.lastPlacedBet = {
+          predictionKey: key,
+          outcomeId: decision.outcomeId,
+          amount: decision.amount,
+          at: Date.now(),
+        };
         runtime.placedForPredictionKey = key;
       }
       clearIntervals();
@@ -960,8 +1037,8 @@
   function checkListStateAndMaybeStart() {
     const listItem = document.querySelector(".predictions-list-item");
     if (!listItem) {
-      log("Discovery: no prediction card found.");
-      closeRewardCenterPanel();
+      logChanged("discoveryStatus", "Discovery: no prediction card found.");
+      closeRewardCenterPanel({ silent: true });
       return;
     }
 
@@ -970,8 +1047,11 @@
       ?.textContent
       ?.trim() ?? "";
     const status = parseStatusText(subtitle);
-
-    log(`Discovery: prediction status ${status}${subtitle ? ` (${subtitle})` : ""}.`);
+    const discoverySig = `${status}|${subtitle}`;
+    if (discoverySig !== runtime.lastDiscoveryStatusSignature) {
+      runtime.lastDiscoveryStatusSignature = discoverySig;
+      log(`Discovery: prediction status ${status}${subtitle ? ` (${subtitle})` : ""}.`);
+    }
 
     if (status === "ACTIVE") {
       startLoopsIfNeeded();
@@ -979,7 +1059,7 @@
       return;
     }
 
-    closeRewardCenterPanel();
+    closeRewardCenterPanel({ silent: true });
   }
 
   function runDiscoveryProbe() {
@@ -998,7 +1078,7 @@
         return;
       }
       click(button);
-      log("Discovery: opened channel points popover.");
+      logChanged("discoveryOpen", "Discovery: opened channel points popover.");
     }
 
     setTimeout(() => {
@@ -1041,7 +1121,11 @@
   ensureUi();
   setInterval(ensureUi, 3000);
   setupObserver();
-  startLoopsIfNeeded();
-  startDiscoveryLoop();
+  if (settings.enabled) {
+    startLoopsIfNeeded();
+    startDiscoveryLoop();
+  } else {
+    log("Auto-Bet is disabled in settings. Polling is paused.");
+  }
   log("Script initialized.");
 })();

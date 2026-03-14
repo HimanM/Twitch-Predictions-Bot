@@ -1,7 +1,7 @@
 <div align="center">
   <img src="pics/UNDERDOG_TW_PRED_ICON.png" width="96" alt="Twitch Prediction Bot Icon" />
   <h1>Twitch Prediction Auto-Bet (Underdog)</h1>
-  <p>A Tampermonkey userscript that monitors Twitch Predictions, tracks live odds, and auto-bets on the underdog at T-5 seconds — with a native-feeling top-nav control panel, live logs, and dry-run mode.</p>
+  <p>A Tampermonkey userscript that monitors Twitch Predictions, tracks live odds, and auto-bets on the underdog at T-5 seconds - with a native-feeling top-nav control panel, live logs, and dry-run mode.</p>
   <img src="https://img.shields.io/badge/Tampermonkey-Compatible-brightgreen?logo=tampermonkey" alt="Tampermonkey" />
   <img src="https://img.shields.io/badge/License-MIT-blue" alt="MIT License" />
   <img src="https://img.shields.io/badge/Platform-Twitch-9146ff?logo=twitch" alt="Twitch" />
@@ -32,31 +32,31 @@
 
 ## Installation (Tampermonkey)
 
-### Step 1 — Install Tampermonkey
+### Step 1 - Install Tampermonkey
 
 Install the Tampermonkey browser extension:
 
 - **Chrome / Edge / Brave:** [Chrome Web Store](https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
 - **Firefox:** [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/)
 
-### Step 2 — Create the Script
+### Step 2 - Create the Script
 
 1. Click the **Tampermonkey icon** in your toolbar.
 2. Select **Create a new script**.
 3. Delete all default template content in the editor.
 
-### Step 3 — Paste the Script
+### Step 3 - Paste the Script
 
 1. Open `twitch-predictions.user.js` from this repository.
 2. Copy the entire file contents.
 3. Paste into the Tampermonkey editor.
 
-### Step 4 — Save and Enable
+### Step 4 - Save and Enable
 
 1. Press **Ctrl+S** (or Cmd+S on Mac) to save.
 2. Confirm the script appears in your **Tampermonkey Dashboard** with the toggle set to **Enabled**.
 
-### Step 5 — Use It
+### Step 5 - Use It
 
 1. Navigate to any Twitch channel (`https://www.twitch.tv/<channel>`).
 2. Look for the **prediction bot icon** added to the top navigation bar.
@@ -85,9 +85,9 @@ All settings are saved to `localStorage` key `tpred.settings.v1` and persist acr
 
 ### Core Idea
 
-The strategy exploits an asymmetry in Twitch's pari-mutuel (pool-based) system: when one side has a significantly larger pool than the other, betting on the underdog (smaller pool) returns a higher multiplier if it wins. This script waits until the last few seconds before the prediction closes — when pools are close to final — to get a stable read on the odds before committing.
+The strategy exploits an asymmetry in Twitch's pari-mutuel (pool-based) system: when one side has a significantly larger pool than the other, betting on the underdog (smaller pool) returns a higher multiplier if it wins. This script waits until the last few seconds before the prediction closes - when pools are close to final - to get a stable read on the odds before committing.
 
-### Step 1 — Detect and Read
+### Step 1 - Detect and Read
 
 Every 5 seconds while a prediction is open, the script reads from the Twitch DOM:
 
@@ -96,7 +96,7 @@ Every 5 seconds while a prediction is open, the script reads from the Twitch DOM
 - Your available channel points balance.
 - Whether a region restriction is active.
 
-### Step 2 — Calculate the Underdog
+### Step 2 - Calculate the Underdog
 
 ```
 ratio = favorite.totalPoints / underdog.totalPoints
@@ -104,7 +104,7 @@ ratio = favorite.totalPoints / underdog.totalPoints
 
 The side with the smaller pool is the **underdog**. A ratio of 5 means the favorite has 5× more points, so underdog bettors share a larger prize pool if they win.
 
-### Step 3 — Tier-Based Bet Sizing
+### Step 3 - Tier-Based Bet Sizing
 
 The script bets more aggressively when the underdog is a bigger longshot:
 
@@ -117,9 +117,9 @@ The script bets more aggressively when the underdog is a bigger longshot:
 | 2 : 1 or more | 100 pts |
 | Less than 2 : 1 | **Skip** (near 50/50) |
 
-Near 50/50 outcomes are skipped — the payout multiplier is too low to justify the risk.
+Near 50/50 outcomes are skipped - the payout multiplier is too low to justify the risk.
 
-### Step 4 — Safety Caps
+### Step 4 - Safety Caps
 
 Before placing, the calculated amount is clamped:
 
@@ -131,9 +131,9 @@ final amount = min(tier amount, 1000, 50% of available points)
 - **Wallet cap:** Never bets more than 50% of your current balance.
 - **Zero guard:** If available points read as 0 (region restriction or wallet empty), skip entirely.
 
-### Step 5 — Execute at T-5 Seconds
+### Step 5 - Execute at T-5 Seconds
 
-A fast watch loop (every 250ms) fires the placement once the timer drops to 5 seconds or below. The decision was already computed ahead of time — the last-second task is just clicking. After placing, the prediction key is recorded to prevent any duplicate bet on the same prediction.
+A fast watch loop (every 250ms) fires the placement once the timer drops to 5 seconds or below. The decision was already computed ahead of time - the last-second task is just clicking. After placing, the prediction key is recorded to prevent any duplicate bet on the same prediction.
 
 ---
 
@@ -173,7 +173,7 @@ You will see timestamped entries for:
 - Discovery probe events (open, status read, close)
 - Odds and timer updates every 5 seconds
 - Pending decision changes (which side, how much)
-- Bet placement attempts — success, dry-run, or failure reason
+- Bet placement attempts - success, dry-run, or failure reason
 
 All log lines are also visible live in the **Logs** section of the in-page control panel.
 
@@ -200,7 +200,7 @@ All log lines are also visible live in the **Logs** section of the in-page contr
 
 ## Safety and Behavior Guarantees
 
-- Bets once per prediction — duplicate placements are blocked by key tracking.
+- Bets once per prediction - duplicate placements are blocked by key tracking.
 - No repeated retries after a failed placement attempt.
 - Automatically skips locked, resolved, or canceled predictions.
 - Does not bet when pool data is incomplete or one side reads as zero.
