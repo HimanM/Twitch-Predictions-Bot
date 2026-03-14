@@ -29,6 +29,11 @@
     return body.querySelector('[data-test-selector="prediction-checkout-active-footer__input-type-toggle"]');
   }
 
+  function getQuickOutcomeButton(outcomeId) {
+    const { blueButton, pinkButton } = T.getPredictionButtons();
+    return outcomeId === "0" ? blueButton : pinkButton;
+  }
+
   function findCustomAmountInput() {
     // Fallback helper used by legacy flow and diagnostics.
     const candidates = [
@@ -146,6 +151,43 @@
     return [];
   }
 
+  function diagnoseCustomControlFailure(outcomeId) {
+    const body = getRewardCenterBody();
+    const toggle = getCustomModeToggleButton();
+    const controls = getCustomOutcomeControls();
+    const outcomeIndex = outcomeId === "0" ? 0 : 1;
+    const target = controls[outcomeIndex] ?? null;
+    const quickButton = getQuickOutcomeButton(outcomeId);
+
+    return {
+      bodyFound: Boolean(body),
+      toggleFound: Boolean(toggle),
+      toggleVisible: isVisible(toggle),
+      controlsCount: controls.length,
+      targetFound: Boolean(target),
+      quickFound: Boolean(quickButton),
+      quickVisible: isVisible(quickButton),
+    };
+  }
+
+  function formatFailureCause(cause) {
+    return [
+      `body=${cause.bodyFound ? "yes" : "no"}`,
+      `toggle=${cause.toggleFound ? "yes" : "no"}`,
+      `toggleVisible=${cause.toggleVisible ? "yes" : "no"}`,
+      `customControls=${cause.controlsCount}`,
+      `targetControl=${cause.targetFound ? "yes" : "no"}`,
+      `quickButton=${cause.quickFound ? "yes" : "no"}`,
+      `quickVisible=${cause.quickVisible ? "yes" : "no"}`,
+    ].join(", ");
+  }
+
+  function logFirstManualFailure(causeText) {
+    if (T.runtime.manualFailureLogged) return;
+    T.runtime.manualFailureLogged = true;
+    T.log(`Manual placement failed (first report): ${causeText}`);
+  }
+
   async function waitForCustomBetControls() {
     for (let attempt = 0; attempt < 10; attempt += 1) {
       const input = findCustomAmountInput();
@@ -202,12 +244,31 @@
         await T.sleep(80);
         click(voteButton);
         T.log(`Predicted ${amount} via ${sourceLabel} using custom amount.`);
+        if (sourceLabel === "manual") {
+          T.runtime.manualFailureLogged = false;
+        }
         return true;
       }
 
-      T.log(
-        `Unable to place ${amount}: custom controls were not available for outcome ${outcomeId}. No quick-bet fallback used.`
-      );
+      const cause = diagnoseCustomControlFailure(outcomeId);
+      const causeText = formatFailureCause(cause);
+
+      if (sourceLabel === "manual") {
+        logFirstManualFailure(causeText);
+      } else {
+        T.log(`Custom placement unavailable for ${amount} on outcome ${outcomeId}: ${causeText}`);
+      }
+
+      const quickButton = getQuickOutcomeButton(outcomeId);
+      if (quickButton && isVisible(quickButton)) {
+        click(quickButton);
+        T.log(
+          `Fallback used: clicked quick outcome button for ${sourceLabel} on outcome ${outcomeId}. Intended amount=${amount}.`
+        );
+        return true;
+      }
+
+      T.log(`Unable to place ${amount}: custom path failed and fallback button was unavailable.`);
       return false;
     } finally {
       T.runtime.betInFlight = false;
@@ -215,6 +276,7 @@
   }
 
   async function manualBet(outcomeId, amount) {
+    T.runtime.manualFailureLogged = false;
     T.ensurePredictionUiOpen();
     T.ensurePredictionDetailsOpen();
     const st = T.runtime.latestState || T.readPredictionState();
