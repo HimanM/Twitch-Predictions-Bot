@@ -11,6 +11,7 @@
 // @match        https://www.twitch.tv/*
 // @grant        none
 // @run-at       document-idle
+// @icon         https://i.ibb.co/gbWGc64j/UNDERDOG-TW-PRED.png
 // ==/UserScript==
 
 (function () {

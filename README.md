@@ -4,6 +4,16 @@ Tampermonkey userscript for Twitch Predictions with a native-feeling top-nav con
 
 It monitors prediction odds, keeps a pending decision updated, and can auto-place a bet near close (T-5 seconds) using an underdog strategy with hard safety caps.
 
+## Preview
+
+### Icon
+
+![Twitch Prediction Bot Icon](pics/UNDERDOG_TW_PRED_ICON.png)
+
+### In-Twitch Control Panel
+
+![Twitch Prediction Bot Menu](pics/PREDICTION_MENU.png)
+
 ## What It Does
 
 - Injects a top-nav control panel (toggle, live status, logs, manual bet buttons).

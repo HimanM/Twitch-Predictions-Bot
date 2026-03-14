@@ -31,6 +31,7 @@ The "bet size" is ultimately `min(tierAmount, 1000, availablePoints * 0.5)`.
 
 ```
 userscript.js          ← Tampermonkey entry point (coordinates everything)
+  ├── ui-panel.js      ← Injected Twitch nav button + toggle/settings menu
   ├── detector.js      ← Watches the Twitch DOM for a prediction UI appearing
   ├── reader.js        ← Reads prediction state (outcomes, timer, your balance)
   ├── timer.js         ← Polls / observes the countdown, fires at T-5s
@@ -304,6 +305,50 @@ Edge cases:
 
 ---
 
+### Phase 7 — Injected UI Control Panel *(NEXT PRIORITY)*
+
+Add a user-facing control surface inside Twitch so behavior is adjustable without
+editing script code.
+
+#### UI Entry Point
+
+- Inject a small button into Twitch top navigation (or nearest stable nav container).
+- Button click toggles a floating settings panel (`display: none` / `block`).
+- Use a unique root id (example: `#tpred-root`) so reinjection is idempotent.
+
+#### Settings Panel (Injected `div`)
+
+Initial toggles/inputs:
+
+1. `Enable Auto-Bet` (master on/off)
+2. `Dry Run (No Clicks)`
+3. `Auto Open Channel Points` (open popover automatically)
+4. `Auto Open Prediction Details` (click list item automatically)
+5. `Bet Trigger Seconds` (default 5)
+6. `Evaluation Interval (ms)` (default 5000)
+7. `Max Bet` (default 1000)
+8. `Min Ratio` override (optional)
+
+#### State Management
+
+- Persist settings in `localStorage` (key: `tpred.settings.v1`).
+- Load settings on script startup before loops start.
+- Runtime reads settings dynamically (no reload required after toggle changes).
+
+#### Styling / UX
+
+- Keep styling isolated with prefixed classes (`tpred-*`) and injected `<style>`.
+- High z-index and compact panel size so it does not clash with Twitch overlays.
+- Show current status line in panel: `Idle`, `Watching`, `Pending bet`, `Bet placed`, `Skipped`.
+
+#### Safety Controls
+
+- If `Enable Auto-Bet = false`, logic still reads state but never clicks.
+- If `Dry Run = true`, all actions are logged and no click/input events are fired.
+- Add manual `Close` button inside panel.
+
+---
+
 ## Edge Cases & Safety Checks
 
 | Case | Handling |
@@ -322,8 +367,6 @@ Edge cases:
 
 ## Next Steps
 
-1. **You:** Share one HTML sample from a **non-region-blocked** active prediction checkout
-  - We already have outcome-button and restriction selectors
-  - We still need the amount input and final confirm button selectors
-2. **Me:** Build the Bettor module (Phase 5) with full place-bet automation
-3. **Me:** Assemble the full `userscript.js` combining all phases into one Tampermonkey file
+1. **Me:** Implement Phase 7 injected UI panel (nav button + toggles + localStorage persistence)
+2. **You:** Validate panel placement/behavior on your Twitch layout and confirm preferred toggle defaults
+3. **Me:** Wire every toggle into runtime behavior (enable/disable clicks, dry run, timing settings)
