@@ -117,6 +117,7 @@ Modules loaded in order:
 | **Enable Auto-Bet** | On | Master on/off for automation |
 | **Dry Run** | Off | Simulate actions only |
 | **Disable Skip** | Off | Bet Auto Min when strategy would skip |
+| **Strategy Mode** | Fixed | Switch between Fixed tier bets and Dynamic min/max-scaled bets |
 | **Auto Open Channel Points** | On | Auto-opens reward center |
 | **Auto Open Prediction Details** | On | Auto-opens prediction detail view |
 | **Discovery Probe (ms)** | 40000 | Idle probe interval (clamped 5000 to 300000) |
@@ -136,7 +137,29 @@ The side with fewer pooled points is treated as underdog.
 
 `ratio = favoritePoints / underdogPoints`
 
-### 2. Tier Base Amount
+### 2. Strategy Mode
+
+Use the **Strategy Mode** toggle in the panel:
+
+- **Fixed**: uses the tier bet values from config (`500/400/300/200/100`).
+- **Dynamic**: computes tier base between your current `Auto Min Bet` and `Auto Max Bet`.
+
+### 3. Tier Bands
+
+The ratio tiers still decide whether to bet or skip:
+
+| Ratio (favorite : underdog) | Tier |
+| --- | --- |
+| 100:1+ | strongest edge |
+| 20:1+ | high edge |
+| 10:1+ | medium edge |
+| 5:1+ | low edge |
+| 2:1+ | minimum edge |
+| <2:1 | skip |
+
+### 4. Base Amount Per Mode
+
+**Fixed mode** uses static tier values:
 
 | Ratio (favorite : underdog) | Base Amount |
 | --- | ---: |
@@ -145,9 +168,14 @@ The side with fewer pooled points is treated as underdog.
 | 10:1+ | 300 |
 | 5:1+ | 200 |
 | 2:1+ | 100 |
-| <2:1 | skip |
 
-### 3. Apply Bounds and Safety
+**Dynamic mode** uses your own min/max settings:
+
+`tierBase = scaleLog(ratio, minRatio=2, maxRatio=100, autoMinBet, autoMaxBet)`
+
+That means changing `Auto Min Bet` and `Auto Max Bet` directly changes what each ratio tier pays in Dynamic mode.
+
+### 5. Apply Bounds and Safety
 
 `amount = min(tierBase, autoMaxBet, availablePoints, floor(availablePoints * 0.5))`
 
@@ -162,6 +190,7 @@ If your settings are:
 - `Auto Min Bet = 1`
 - `Auto Max Bet = 1000`
 - `Available Points = 800`
+- `Strategy Mode = Dynamic`
 
 And the live pool is:
 
@@ -171,15 +200,15 @@ And the live pool is:
 Then the bot evaluates it like this:
 
 1. `B` is the underdog because `10 < 10000`.
-2. `ratio = 10000 / 10 = 1000`, so it hits the `100:1+` tier.
-3. The tier base amount is `500`.
-4. The final bet becomes `min(500, 1000, 800, floor(800 * 0.5))`.
+2. `ratio = 10000 / 10 = 1000`, so it hits the top tier and is clamped to the top ratio band.
+3. Dynamic base becomes approximately `1000` (your current max).
+4. The final bet becomes `min(1000, 1000, 800, floor(800 * 0.5))`.
 5. `floor(800 * 0.5) = 400`, so the final amount is `400`.
 
-Result: the bot bets `400` on `B`, not `500` and not `1000`, because the 50% wallet cap is stricter.
+Result: the bot bets `400` on `B`. Even with a high dynamic base, the 50% wallet cap is stricter.
 
 > [!IMPORTANT]
-> `Auto Max Bet` is only a ceiling. It does not force the bot to spend that amount.
+> `Auto Max Bet` is only a ceiling. It does not force the bot to spend that amount, in either mode.
 
 ---
 

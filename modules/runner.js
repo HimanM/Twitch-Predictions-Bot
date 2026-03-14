@@ -38,9 +38,11 @@
   }
 
   function logModeSnapshot(contextLabel) {
+    const strategyMode = T.settings.strategyMode === "dynamic" ? "DYNAMIC" : "FIXED";
     log(
       `${contextLabel} | Auto-Bet=${T.settings.enabled ? "ON" : "OFF"} | ` +
-      `Dry-Run=${T.settings.dryRun ? "ON" : "OFF"} | Polling=${isPollingActive() ? "ON" : "OFF"}`
+      `Dry-Run=${T.settings.dryRun ? "ON" : "OFF"} | ` +
+      `Strategy=${strategyMode} | Polling=${isPollingActive() ? "ON" : "OFF"}`
     );
   }
 

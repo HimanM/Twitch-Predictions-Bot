@@ -7,6 +7,38 @@
 
   const T = window.TPRED;
 
+  function getStrategyMode() {
+    return T.settings.strategyMode === "dynamic" ? "dynamic" : "fixed";
+  }
+
+  function getFixedTierBaseBet(tier, autoMinBet, autoMaxBet) {
+    const tierBet = Number(tier?.bet);
+    const fallback = autoMinBet;
+    if (Number.isNaN(tierBet)) return fallback;
+    return Math.max(autoMinBet, Math.min(autoMaxBet, Math.round(tierBet)));
+  }
+
+  function getDynamicTierBaseBet(ratio, autoMinBet, autoMaxBet) {
+    const tiers = T.CONFIG.TIERS;
+    if (!Array.isArray(tiers) || tiers.length === 0) return autoMinBet;
+
+    const lowestTier = tiers[tiers.length - 1];
+    const highestTier = tiers[0];
+    const minRatio = Math.max(1, lowestTier.minRatio);
+    const maxRatio = Math.max(minRatio, highestTier.minRatio);
+    const clampedRatio = Math.max(minRatio, Math.min(ratio, maxRatio));
+
+    if (autoMaxBet <= autoMinBet) return autoMinBet;
+
+    const minLog = Math.log(minRatio);
+    const maxLog = Math.log(maxRatio);
+    const ratioLog = Math.log(clampedRatio);
+    const normalized = maxLog === minLog ? 1 : (ratioLog - minLog) / (maxLog - minLog);
+
+    const scaled = autoMinBet + normalized * (autoMaxBet - autoMinBet);
+    return Math.max(autoMinBet, Math.min(autoMaxBet, Math.round(scaled)));
+  }
+
   function decideBet(state) {
     const NO_BET = (reason) => ({
       shouldBet: false,
@@ -47,8 +79,12 @@
 
     const autoMinBet = T.getAutoMinBet();
     const autoMaxBet = T.getAutoMaxBet();
+    const strategyMode = getStrategyMode();
+    const tierBaseBet = strategyMode === "dynamic"
+      ? getDynamicTierBaseBet(ratio, autoMinBet, autoMaxBet)
+      : getFixedTierBaseBet(tier, autoMinBet, autoMaxBet);
 
-    let amount = Math.min(tier.bet, autoMaxBet, state.myAvailablePoints);
+    let amount = Math.min(tierBaseBet, autoMaxBet, state.myAvailablePoints);
     amount = Math.min(amount, Math.floor(state.myAvailablePoints * 0.5));
 
     if (amount < autoMinBet) {
@@ -62,7 +98,7 @@
       outcomeId: underdog.id,
       outcomeTitle: underdog.title,
       amount,
-      reason: `Underdog ${underdog.title}, ratio ${ratio.toFixed(1)}:1, amount ${amount}`,
+      reason: `Underdog ${underdog.title}, mode ${strategyMode}, ratio ${ratio.toFixed(1)}:1, tier ${tier.minRatio}+, base ${tierBaseBet}, amount ${amount}`,
     };
   }
 

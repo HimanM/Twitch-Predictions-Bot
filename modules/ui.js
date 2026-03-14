@@ -88,6 +88,49 @@
       .tpred-inline input::placeholder {
         color: var(--color-text-alt-2);
       }
+      .tpred-segment-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .6rem;
+        margin: .4rem 0;
+      }
+      .tpred-segment-label {
+        min-width: 130px;
+        color: var(--color-text-alt-2);
+        font-size: 12px;
+      }
+      .tpred-segment {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--color-border-input, #3b3b44);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--color-background-input, #18181b);
+      }
+      .tpred-segment-btn {
+        min-width: 88px;
+        height: 30px;
+        padding: 0 .7rem;
+        border: 0;
+        background: transparent;
+        color: var(--color-text-alt-2);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background .15s ease, color .15s ease;
+      }
+      .tpred-segment-btn + .tpred-segment-btn {
+        border-left: 1px solid rgba(255,255,255,.08);
+      }
+      .tpred-segment-btn.tpred-active {
+        background: #9147ff;
+        color: #fff;
+      }
+      .tpred-segment-btn:not(.tpred-active):hover {
+        background: rgba(255,255,255,.06);
+        color: var(--color-text-base);
+      }
       .tpred-toggle {
         display: inline-flex;
         align-items: center;
@@ -408,6 +451,13 @@
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-enabled" type="checkbox"> <span>Enable Auto-Bet</span></label></div>
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-dry-run" type="checkbox"> <span>Dry Run (No bet clicks)</span></label></div>
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-force-min-on-skip" type="checkbox"> <span>Disable Skip (bet Auto Min on skips)</span></label></div>
+            <div class="tpred-segment-row">
+              <span class="tpred-segment-label">Strategy Mode</span>
+              <div id="tpred-strategy-mode" class="tpred-segment" role="group" aria-label="Strategy Mode">
+                <button id="tpred-strategy-fixed" class="tpred-segment-btn" type="button" data-mode="fixed">Fixed</button>
+                <button id="tpred-strategy-dynamic" class="tpred-segment-btn" type="button" data-mode="dynamic">Dynamic</button>
+              </div>
+            </div>
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-auto-popover" type="checkbox"> <span>Auto Open Channel Points</span></label></div>
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-auto-details" type="checkbox"> <span>Auto Open Prediction Details</span></label></div>
             <div class="tpred-row tpred-inline">
@@ -481,6 +531,7 @@
     T.runtime.ui.evalInterval = root.querySelector("#tpred-eval-ms");
     T.runtime.ui.toggleEnabled = root.querySelector("#tpred-enabled");
     T.runtime.ui.toggleDryRun = root.querySelector("#tpred-dry-run");
+    T.runtime.ui.strategyMode = root.querySelector("#tpred-strategy-mode");
     T.runtime.ui.toggleForceMinOnSkip = root.querySelector("#tpred-force-min-on-skip");
     T.runtime.ui.toggleAutoOpenPopover = root.querySelector("#tpred-auto-popover");
     T.runtime.ui.toggleAutoOpenDetails = root.querySelector("#tpred-auto-details");
@@ -535,6 +586,15 @@
     if (T.runtime.ui.autoMinBet) T.runtime.ui.autoMinBet.value = String(T.getAutoMinBet());
     if (T.runtime.ui.autoMaxBet) T.runtime.ui.autoMaxBet.value = String(T.getAutoMaxBet());
 
+    const applyStrategyModeToUi = () => {
+      const mode = T.settings.strategyMode === "dynamic" ? "dynamic" : "fixed";
+      const fixedBtn = root.querySelector("#tpred-strategy-fixed");
+      const dynamicBtn = root.querySelector("#tpred-strategy-dynamic");
+      fixedBtn?.classList.toggle("tpred-active", mode === "fixed");
+      dynamicBtn?.classList.toggle("tpred-active", mode === "dynamic");
+    };
+    applyStrategyModeToUi();
+
     T.runtime.ui.toggleEnabled?.addEventListener("change", () => {
       T.settings.enabled = T.runtime.ui.toggleEnabled.checked;
       T.saveSettings();
@@ -559,6 +619,20 @@
       T.settings.forceMinOnSkip = T.runtime.ui.toggleForceMinOnSkip.checked;
       T.saveSettings();
       T.log(`Disable Skip ${T.settings.forceMinOnSkip ? "enabled" : "disabled"}.`);
+    });
+
+    T.runtime.ui.strategyMode?.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const nextMode = target.dataset?.mode;
+      if (nextMode !== "fixed" && nextMode !== "dynamic") return;
+      if (T.settings.strategyMode === nextMode) return;
+      T.settings.strategyMode = nextMode;
+      T.saveSettings();
+      applyStrategyModeToUi();
+      T.log(`Strategy mode updated: ${nextMode}.`);
+      T.evaluate();
+      renderUi();
     });
 
     T.runtime.ui.toggleAutoOpenPopover?.addEventListener("change", () => {
@@ -652,7 +726,7 @@
       T.runtime.ui.panelBody.style.gridTemplateColumns = T.settings.logsVisible ? "280px minmax(0, 1fr)" : "minmax(0, 1fr)";
     }
     if (T.runtime.ui.panel) {
-      T.runtime.ui.panel.style.width = T.settings.logsVisible ? "760px" : "460px";
+      T.runtime.ui.panel.style.width = T.settings.logsVisible ? "780px" : "500px";
     }
     if (T.runtime.ui.toggleLogs) {
       T.runtime.ui.toggleLogs.textContent = T.settings.logsVisible ? "Hide Logs" : "Show Logs";
@@ -665,6 +739,7 @@
       ? T.runtime.lastPlacedBet
       : null;
     const skipEnabled = !T.settings.forceMinOnSkip;
+    const strategyMode = T.settings.strategyMode === "dynamic" ? "Dynamic" : "Fixed";
     const stateLabel = st ? st.status : "IDLE";
     const timeLabel = st ? (Number.isFinite(st.secondsLeft) ? `${st.secondsLeft}s` : "-") : "-";
     const pointsLabel = st ? String(st.myAvailablePoints) : "-";
@@ -699,6 +774,7 @@
         ${flagChip("Auto-Bet", T.settings.enabled)}
         ${flagChip("Dry-Run", T.settings.dryRun)}
         ${flagChip("Skip", skipEnabled)}
+        <span class="tpred-flag">Mode: ${T.escapeHtml(strategyMode)}</span>
       </div>
       <div class="tpred-reason">Reason: ${T.escapeHtml(reasonLabel)}</div>
     `;
