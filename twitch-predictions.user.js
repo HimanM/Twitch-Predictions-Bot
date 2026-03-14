@@ -4,9 +4,11 @@
 // @version      1.0.0
 // @description  Twitch prediction assistant with live odds panel, logs, manual controls, and optional auto-bet at T-5s.
 // @author       https://github.com/HimanM
-// @homepageURL  https://github.com/HimanM
-// @supportURL   https://github.com/HimanM
-// @source       https://github.com/HimanM
+// @homepageURL  https://github.com/HimanM/Twitch-Predictions-Bot
+// @supportURL   https://github.com/HimanM/Twitch-Predictions-Bot/issues
+// @source       https://github.com/HimanM/Twitch-Predictions-Bot
+// @downloadURL  https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/main/twitch-predictions.user.js
+// @updateURL    https://raw.githubusercontent.com/HimanM/Twitch-Predictions-Bot/main/twitch-predictions.user.js
 // @license      MIT
 // @match        https://www.twitch.tv/*
 // @grant        none
@@ -128,6 +130,17 @@
 
   function fmtTime(ts) {
     return new Date(ts).toLocaleTimeString();
+  }
+
+  function isPollingActive() {
+    return Boolean(runtime.evalIntervalId || runtime.watchIntervalId || runtime.discoveryIntervalId);
+  }
+
+  function logModeSnapshot(contextLabel) {
+    log(
+      `${contextLabel} | Auto-Bet=${settings.enabled ? "ON" : "OFF"} | ` +
+      `Dry-Run=${settings.dryRun ? "ON" : "OFF"} | Polling=${isPollingActive() ? "ON" : "OFF"}`
+    );
   }
 
   function getDiscoveryIntervalMs() {
@@ -266,12 +279,14 @@
         stopAutomationPolling();
         log("Auto-Bet disabled. Stopped active loops and discovery polling.");
       }
+      logModeSnapshot("Mode updated");
     });
 
     runtime.ui.toggleDryRun.addEventListener("change", () => {
       settings.dryRun = runtime.ui.toggleDryRun.checked;
       saveSettings();
       log(`Dry Run ${settings.dryRun ? "enabled" : "disabled"}.`);
+      logModeSnapshot("Mode updated");
     });
 
     runtime.ui.toggleAutoOpenPopover.addEventListener("change", () => {
@@ -403,8 +418,8 @@
     const st = runtime.latestState;
     const pending = runtime.pendingDecision;
     const status = st
-      ? `State: ${st.status} | Time: ${Number.isFinite(st.secondsLeft) ? `${st.secondsLeft}s` : "?"} | Points: ${st.myAvailablePoints}`
-      : "State: idle";
+      ? `State: ${st.status} | Time: ${Number.isFinite(st.secondsLeft) ? `${st.secondsLeft}s` : "?"} | Points: ${st.myAvailablePoints} | Auto: ${settings.enabled ? "ON" : "OFF"} | Dry-Run: ${settings.dryRun ? "ON" : "OFF"}`
+      : `State: idle | Auto: ${settings.enabled ? "ON" : "OFF"} | Dry-Run: ${settings.dryRun ? "ON" : "OFF"}`;
     const pendingText = pending
       ? `\nPending: ${pending.shouldBet ? `${pending.outcomeTitle} / ${pending.amount}` : "skip"}`
       : "\nPending: none";
@@ -1124,8 +1139,10 @@
   if (settings.enabled) {
     startLoopsIfNeeded();
     startDiscoveryLoop();
+    log("Auto-Bet is enabled in settings. Polling started.");
   } else {
     log("Auto-Bet is disabled in settings. Polling is paused.");
   }
+  logModeSnapshot("Startup mode");
   log("Script initialized.");
 })();
