@@ -29,6 +29,7 @@
 
   T.runtime = {
     pendingDecision: null,
+    lastBettableDecision: null,
     latestState: null,
     lastPlacedBet: null,
     betInFlight: false,

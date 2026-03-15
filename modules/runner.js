@@ -96,6 +96,10 @@
       predictionKey: T.makePredictionKey(state),
     };
 
+    if (state.status === "ACTIVE" && T.runtime.pendingDecision.shouldBet) {
+      T.runtime.lastBettableDecision = { ...T.runtime.pendingDecision };
+    }
+
     const sig = [
       state.status,
       state.secondsLeft,
@@ -117,6 +121,22 @@
     }
 
     T.renderUi();
+  }
+
+  function selectTriggerDecision(state, key) {
+    const pending = T.runtime.pendingDecision;
+    if (pending?.shouldBet && pending.predictionKey === key) {
+      return pending;
+    }
+
+    const fallback = T.runtime.lastBettableDecision;
+    if (!fallback?.shouldBet) return null;
+    if (fallback.predictionKey !== key) return null;
+
+    const ageMs = Date.now() - (fallback.snapshotAt || 0);
+    if (ageMs > 15000) return null;
+
+    return fallback;
   }
 
   async function watchAndExecute() {
@@ -148,10 +168,20 @@
       return;
     }
 
-    if (state.secondsLeft <= T.CONFIG.BET_TRIGGER_SECONDS) {
-      const decision = T.runtime.pendingDecision;
+    const secondsLeft = Number(state.secondsLeft);
+    const pendingSeconds = Number(T.runtime.pendingDecision?.secondsLeft);
+    const withinTrigger = (
+      Number.isFinite(secondsLeft) && secondsLeft <= T.CONFIG.BET_TRIGGER_SECONDS
+    ) || (
+      Number.isFinite(pendingSeconds) &&
+      pendingSeconds <= T.CONFIG.BET_TRIGGER_SECONDS &&
+      T.runtime.pendingDecision?.predictionKey === key
+    );
+
+    if (withinTrigger) {
+      const decision = selectTriggerDecision(state, key);
       if (!decision) {
-        log("No pendingDecision at trigger; skipping.");
+        log("No bettable decision at trigger; skipping.");
         clearIntervals();
         return;
       }
