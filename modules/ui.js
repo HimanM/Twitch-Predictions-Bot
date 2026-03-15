@@ -392,6 +392,14 @@
         background: rgba(224, 58, 62, .14);
         border-color: rgba(224, 58, 62, .4);
       }
+      .tpred-flag-owner {
+        background: rgba(145, 71, 255, .18);
+        border-color: rgba(145, 71, 255, .5);
+      }
+      .tpred-flag-observer {
+        background: rgba(255, 255, 255, .08);
+        border-color: rgba(255, 255, 255, .24);
+      }
       .tpred-reason {
         margin-top: .52rem;
         font-size: 13px;
@@ -1026,6 +1034,9 @@
       : null;
     const skipEnabled = !T.settings.forceMinOnSkip;
     const strategyMode = T.settings.strategyMode === "dynamic" ? "Dynamic" : "Fixed";
+    const ownsLock = typeof T.hasAutoBetLock === "function" ? T.hasAutoBetLock() : false;
+    const lockRole = (T.settings.enabled && ownsLock) ? "Owner" : "Observer";
+    const lockRoleClass = lockRole === "Owner" ? "tpred-flag-owner" : "tpred-flag-observer";
     const stateLabel = st ? st.status : "IDLE";
     const timeLabel = st ? (Number.isFinite(st.secondsLeft) ? `${st.secondsLeft}s` : "-") : "-";
     const pointsLabel = st ? String(st.myAvailablePoints) : "-";
@@ -1061,6 +1072,7 @@
         ${flagChip("Dry-Run", T.settings.dryRun)}
         ${flagChip("Skip", skipEnabled)}
         <span class="tpred-flag">Mode: ${T.escapeHtml(strategyMode)}</span>
+        <span class="tpred-flag ${lockRoleClass}">Role: ${lockRole}</span>
       </div>
       <div class="tpred-reason">Reason: ${T.escapeHtml(reasonLabel)}</div>
     `;
