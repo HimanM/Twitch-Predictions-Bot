@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Twitch Prediction Auto-Bet (Underdog)
 // @namespace    https://twitch.tv/
-// @version      1.1.0
+// @version      1.1.2
 // @description  Twitch prediction assistant with live odds panel, logs, manual controls, and optional auto-bet at T-5s.
 // @author       https://github.com/HimanM
 // @homepageURL  https://github.com/HimanM/Twitch-Predictions-Bot
