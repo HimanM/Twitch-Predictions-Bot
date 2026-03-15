@@ -897,7 +897,7 @@
             <div id="tpred-logs" class="tpred-logs"></div>
             <div class="tpred-logs-footer">
               <img src="https://i.ibb.co/gbWGc64j/UNDERDOG-TW-PRED.png" alt="Underdog" />
-              <div class="tpred-logs-footer-title">Underdog</div>
+              <div class="tpred-logs-footer-title">UNDERDOG</div>
               <div class="tpred-oss-note">
                 <p>Open-source Twitch Predictions assistant.</p>
                 <p>Underdog strategy with live monitor and auto-bet tools.</p>
