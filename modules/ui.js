@@ -313,62 +313,65 @@
         color: var(--tpred-text);
       }
 
-      /* ─── Checkbox Toggle ─── */
+      /* ─── Checkbox Toggle (Mini Switch) ─── */
       .tpred-toggle {
         display: inline-flex;
         align-items: center;
-        gap: .6rem;
+        gap: .55rem;
         cursor: pointer;
         user-select: none;
-        padding: .3rem .4rem;
+        padding: .25rem .35rem;
         border-radius: 6px;
         transition: background .15s ease;
       }
       .tpred-toggle:hover { background: rgba(255, 255, 255, .04); }
       .tpred-toggle input[type="checkbox"] {
-        width: 18px;
+        width: 34px;
         height: 18px;
         margin: 0;
         appearance: none;
         -webkit-appearance: none;
-        border: 2px solid rgba(255, 255, 255, .2);
-        border-radius: 5px;
+        border: 1px solid rgba(255, 255, 255, .16);
+        border-radius: 999px;
         position: relative;
-        background: rgba(0, 0, 0, .3);
+        background: rgba(255, 255, 255, .08);
         cursor: pointer;
-        transition: border-color .2s ease, background .2s ease, box-shadow .2s ease, transform .15s cubic-bezier(.34,1.56,.64,1);
+        flex-shrink: 0;
+        transition: background .25s cubic-bezier(.4,0,.2,1), border-color .25s ease, box-shadow .25s ease;
       }
       .tpred-toggle input[type="checkbox"]::before {
         content: "";
         position: absolute;
-        left: 4px;
-        top: 1px;
-        width: 5px;
-        height: 10px;
-        border-right: 2px solid #ffffff;
-        border-bottom: 2px solid #ffffff;
-        transform: rotate(45deg) scale(0);
-        transform-origin: center;
-        opacity: 0;
-        transition: transform .18s cubic-bezier(.34,1.56,.64,1), opacity .15s ease;
+        top: 2px;
+        left: 2px;
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .65);
+        box-shadow: 0 1px 3px rgba(0,0,0,.3);
+        transition: transform .25s cubic-bezier(.4,0,.2,1), background .2s ease, box-shadow .2s ease;
       }
       .tpred-toggle input[type="checkbox"]:checked {
-        background: var(--tpred-accent);
-        border-color: var(--tpred-accent);
-        box-shadow: 0 0 0 3px rgba(145, 71, 255, .2), 0 0 8px rgba(145, 71, 255, .15);
-        transform: scale(1);
+        background: linear-gradient(135deg, var(--tpred-accent), #7c3aed);
+        border-color: rgba(145, 71, 255, .7);
+        box-shadow: 0 0 8px rgba(145, 71, 255, .2);
       }
       .tpred-toggle input[type="checkbox"]:checked::before {
-        transform: rotate(45deg) scale(1);
-        opacity: 1;
+        transform: translateX(16px);
+        background: #fff;
+        box-shadow: 0 1px 4px rgba(145, 71, 255, .3);
       }
       .tpred-toggle input[type="checkbox"]:active {
-        transform: scale(.88);
+        transform: none;
+      }
+      .tpred-toggle input[type="checkbox"]:active::before {
+        width: 15px;
       }
       .tpred-toggle span {
         color: var(--tpred-text);
-        font-size: 13px;
+        font-size: 12.5px;
         font-weight: 500;
+        line-height: 1.2;
       }
 
       /* ─── Master Toggle (Enable Auto-Bet) ─── */
