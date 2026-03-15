@@ -126,7 +126,7 @@
   function selectTriggerDecision(state, key) {
     const pending = T.runtime.pendingDecision;
     if (pending?.shouldBet && pending.predictionKey === key) {
-      return pending;
+      return { decision: pending, source: "pending", ageMs: 0 };
     }
 
     const fallback = T.runtime.lastBettableDecision;
@@ -136,7 +136,7 @@
     const ageMs = Date.now() - (fallback.snapshotAt || 0);
     if (ageMs > 15000) return null;
 
-    return fallback;
+    return { decision: fallback, source: "fallback", ageMs };
   }
 
   async function watchAndExecute() {
@@ -179,15 +179,23 @@
     );
 
     if (withinTrigger) {
-      const decision = selectTriggerDecision(state, key);
-      if (!decision) {
+      const picked = selectTriggerDecision(state, key);
+      if (!picked?.decision) {
         log("No bettable decision at trigger; skipping.");
         clearIntervals();
         return;
       }
+      const { decision, source, ageMs } = picked;
+
+      log(
+        `Trigger decision: source=${source}, outcome=${decision.outcomeTitle}, amount=${decision.amount}` +
+        `${source === "fallback" ? `, ageMs=${ageMs}` : ""}.`
+      );
 
       clearIntervals();
+      log(`Bet exec: placing ${decision.amount} on ${decision.outcomeTitle}.`);
       const success = await T.placeBet(decision);
+      log(`Bet exec result: ${success ? "success" : "failed"}.`);
       if (success) {
         T.runtime.lastPlacedBet = {
           predictionKey: key,
