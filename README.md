@@ -276,6 +276,25 @@ Result: the bot bets `400` on `B`. Even with a high dynamic base, the 50% wallet
 
 ---
 
+## Skip Scenarios
+
+The bot may skip a prediction instead of betting. The table below lists every skip scenario, whether it can be bypassed by the **Disable Skip** toggle, and why.
+
+| # | Scenario | Skippable by Disable Skip? | Reason |
+| --- | --- | :---: | --- |
+| 1 | **Region blocked / 0 available points** | ❌ | You physically cannot place a bet. |
+| 2 | **Prediction not ACTIVE** (locked, resolved, canceled) | ❌ | Betting window is closed. |
+| 3 | **Both outcomes have 0 points** | ❌ | No signal at all — nothing to evaluate. |
+| 4 | **One outcome has 0 points** | ❌ (always bets) | The bot automatically bets `Auto Min Bet` on the 0-point side for max payout. This is not a skip. |
+| 5 | **Near 50/50** (ratio < 2:1, no tier matches) | ✅ | Payout too low to justify the risk. Disable Skip forces a min bet instead. |
+| 6 | **Computed bet below Auto Min Bet** (after caps) | ✅ | Safety floor. Disable Skip forces a min bet instead. |
+| 7 | **Computed bet ≤ 0** (edge case after all caps) | ❌ | Cannot place a 0-point bet. |
+
+> [!NOTE]
+> **Disable Skip** converts skips #5 and #6 into a forced `Auto Min Bet` on the underdog side (still subject to the 50% wallet cap and `Auto Max Bet`).
+
+---
+
 ## Runtime Flow
 
 1. Startup initializes UI, observer, and auto-bet lock.
