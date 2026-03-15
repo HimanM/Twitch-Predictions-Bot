@@ -14,76 +14,125 @@
     const style = document.createElement("style");
     style.id = "tpred-style";
     style.textContent = `
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
       #tpred-root {
         position: relative;
         margin-right: .5rem;
         --tpred-accent: #9147ff;
-        --tpred-panel-bg: rgba(24, 24, 27, .96);
-        --tpred-surface: rgba(36, 36, 42, .9);
-        --tpred-surface-2: rgba(43, 43, 50, .88);
-        --tpred-border: rgba(255, 255, 255, .12);
-        --tpred-border-strong: rgba(255, 255, 255, .2);
+        --tpred-accent-hover: #a970ff;
+        --tpred-accent-muted: #bf94ff;
+        --tpred-panel-bg: rgba(14, 14, 16, .97);
+        --tpred-surface: rgba(31, 31, 35, .95);
+        --tpred-surface-2: rgba(38, 38, 44, .92);
+        --tpred-surface-hover: rgba(48, 48, 56, .9);
+        --tpred-border: rgba(255, 255, 255, .08);
+        --tpred-border-strong: rgba(255, 255, 255, .14);
         --tpred-text: #efeff1;
         --tpred-text-muted: #adadb8;
+        --tpred-green: #00b85c;
+        --tpred-red: #eb0400;
+        --tpred-blue: #387aff;
+        --tpred-pink: #f02b8a;
+        --tpred-radius: 8px;
+        --tpred-radius-lg: 12px;
+        font-family: 'Inter', 'Roobert', 'Helvetica Neue', Helvetica, Arial, sans-serif;
       }
+
+      /* ─── Panel Shell ─── */
       .tpred-panel {
         position: absolute;
         right: 0;
         top: 2.75rem;
-        width: 760px;
+        width: 780px;
         max-height: calc(100vh - 84px);
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        background: radial-gradient(120% 100% at 100% 0%, rgba(145, 71, 255, .12) 0%, rgba(24, 24, 27, .96) 48%), var(--tpred-panel-bg);
+        background: var(--tpred-panel-bg);
         border: 1px solid var(--tpred-border-strong);
-        border-radius: 14px;
+        border-radius: var(--tpred-radius-lg);
         z-index: 999999;
-        padding: .8rem;
-        box-shadow: 0 14px 34px rgba(0,0,0,.46), 0 0 0 1px rgba(145, 71, 255, .12) inset;
-        backdrop-filter: blur(6px);
+        padding: 0;
+        box-shadow:
+          0 20px 60px rgba(0,0,0,.55),
+          0 0 0 1px rgba(145, 71, 255, .08) inset,
+          0 1px 0 rgba(255,255,255,.04) inset;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity .18s ease, transform .18s ease;
       }
-      .tpred-hidden { display: none; }
+      .tpred-hidden {
+        display: none !important;
+        opacity: 0;
+        transform: translateY(-6px);
+        pointer-events: none;
+      }
+
+      /* ─── Accent Top Bar ─── */
+      .tpred-accent-bar {
+        height: 3px;
+        background: linear-gradient(90deg, var(--tpred-accent), var(--tpred-accent-muted), var(--tpred-accent));
+        border-radius: var(--tpred-radius-lg) var(--tpred-radius-lg) 0 0;
+        flex-shrink: 0;
+      }
+
+      /* ─── Header ─── */
       .tpred-header {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
-        margin-bottom: .65rem;
-        padding-bottom: .55rem;
+        padding: .65rem .85rem .55rem;
         border-bottom: 1px solid var(--tpred-border);
         gap: .5rem;
+        flex-shrink: 0;
       }
-      .tpred-header-left { display: flex; flex-direction: column; gap: .2rem; }
-      .tpred-header-actions { display: flex; align-items: center; gap: .35rem; }
+      .tpred-header-left { display: flex; flex-direction: column; gap: .15rem; }
+      .tpred-header-actions { display: flex; align-items: center; gap: .3rem; }
       .tpred-header-btn {
         min-height: 30px;
-        padding: 0 .7rem;
-        border-radius: 999px;
+        padding: 0 .75rem;
+        border-radius: var(--tpred-radius);
         font-size: 12px;
+        font-weight: 600;
         background: var(--tpred-surface);
         border: 1px solid var(--tpred-border);
-        color: var(--tpred-text);
+        color: var(--tpred-text-muted);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         line-height: 1;
+        cursor: pointer;
+        transition: background .15s ease, color .15s ease, border-color .15s ease;
       }
+      .tpred-header-btn:hover {
+        background: var(--tpred-surface-hover);
+        color: var(--tpred-text);
+        border-color: var(--tpred-border-strong);
+      }
+
+      /* ─── Body Grid ─── */
       .tpred-body {
         display: grid;
         grid-template-columns: 280px minmax(0, 1fr);
-        gap: .85rem;
+        gap: 0;
         align-items: stretch;
         flex: 1;
         min-height: 0;
       }
+
       .tpred-main {
         min-width: 0;
         max-height: none;
         min-height: 0;
         overflow: auto;
-        padding-right: .2rem;
-        padding-bottom: .7rem;
+        overflow-x: hidden;
+        padding: .6rem .85rem .7rem .7rem;
       }
+
+      /* ─── Logs Pane ─── */
       .tpred-logs-pane {
         min-width: 0;
         max-height: none;
@@ -92,49 +141,77 @@
         display: flex;
         flex-direction: column;
         border-right: 1px solid var(--tpred-border);
-        background: linear-gradient(180deg, rgba(32, 32, 37, .62), rgba(28, 28, 32, .18));
-        border-radius: 10px;
-        padding: .45rem .75rem .7rem .55rem;
-        padding-right: .75rem;
-        padding-bottom: .7rem;
+        background: rgba(10, 10, 12, .5);
+        padding: .55rem .65rem .7rem;
       }
       .tpred-logs-pane.tpred-hidden-pane {
         display: none;
       }
-      .tpred-caption { color: var(--tpred-text-muted); font-size: 12px; line-height: 1.2; }
-      .tpred-row { margin: .42rem 0; }
+
+      /* ─── Section Labels ─── */
+      .tpred-section-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: var(--tpred-accent-muted);
+        margin-bottom: .35rem;
+        margin-top: .15rem;
+        padding-left: .1rem;
+      }
+
+      .tpred-caption {
+        color: var(--tpred-text-muted);
+        font-size: 11px;
+        line-height: 1.2;
+        letter-spacing: .02em;
+      }
+      .tpred-row { margin: .4rem 0; }
+
       .tpred-settings-divider {
         height: 1px;
-        margin: .58rem 0;
-        background: linear-gradient(90deg, rgba(255,255,255,.22), rgba(255,255,255,.08));
+        margin: .55rem 0;
+        background: linear-gradient(90deg, var(--tpred-border-strong), transparent);
       }
+
+      /* ─── Inline Input Rows ─── */
       .tpred-inline { display: flex; gap: .5rem; align-items: center; }
-      .tpred-inline > label { min-width: 136px; color: var(--tpred-text-muted); font-size: 12px; }
+      .tpred-inline > label {
+        min-width: 140px;
+        color: var(--tpred-text-muted);
+        font-size: 12px;
+        font-weight: 500;
+      }
       .tpred-input-wrap {
         display: inline-flex;
         align-items: stretch;
-        gap: .35rem;
+        gap: .3rem;
       }
       .tpred-inline input {
-        width: 132px;
+        width: 120px;
         height: 32px;
         border: 1px solid var(--tpred-border);
-        border-radius: 8px;
-        background: var(--tpred-surface);
+        border-radius: var(--tpred-radius);
+        background: rgba(0, 0, 0, .35);
         color: var(--tpred-text);
         padding: 0 .55rem;
         outline: none;
-        transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
       }
       .tpred-inline input:hover {
-        border-color: rgba(255, 255, 255, .28);
+        border-color: rgba(145, 71, 255, .35);
+        background: rgba(0, 0, 0, .45);
       }
       .tpred-inline input:focus {
         border-color: var(--tpred-accent);
-        box-shadow: 0 0 0 2px rgba(145, 71, 255, .24);
+        box-shadow: 0 0 0 3px rgba(145, 71, 255, .18), 0 0 12px rgba(145, 71, 255, .1);
+        background: rgba(0, 0, 0, .5);
       }
       .tpred-inline input::placeholder {
-        color: var(--color-text-alt-2);
+        color: rgba(173, 173, 184, .5);
       }
       .tpred-inline input[type="number"] {
         -moz-appearance: textfield;
@@ -145,20 +222,21 @@
         -webkit-appearance: none;
         margin: 0;
       }
+
+      /* ─── Stepper Buttons ─── */
       .tpred-stepper {
         display: inline-flex;
         align-items: stretch;
-        border: 1px solid rgba(145, 71, 255, .52);
-        border-radius: 8px;
+        border: 1px solid rgba(145, 71, 255, .4);
+        border-radius: var(--tpred-radius);
         overflow: hidden;
-        box-shadow: 0 0 0 1px rgba(145, 71, 255, .14) inset;
       }
       .tpred-step-btn {
-        width: 26px;
+        width: 28px;
         height: 32px;
         border: 0;
-        background: linear-gradient(180deg, rgba(169,112,255,.34), rgba(145,71,255,.26));
-        color: #f3ecff;
+        background: rgba(145, 71, 255, .15);
+        color: var(--tpred-accent-muted);
         padding: 0;
         line-height: 1;
         font-size: 15px;
@@ -167,14 +245,21 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        transition: background .15s ease, color .12s ease, transform .1s ease;
       }
       .tpred-step-btn + .tpred-step-btn {
-        border-left: 1px solid rgba(145, 71, 255, .52);
+        border-left: 1px solid rgba(145, 71, 255, .4);
       }
       .tpred-step-btn:hover {
-        background: linear-gradient(180deg, rgba(175,120,255,.5), rgba(151,77,255,.4));
+        background: rgba(145, 71, 255, .3);
         color: #fff;
       }
+      .tpred-step-btn:active {
+        transform: scale(.92);
+        background: rgba(145, 71, 255, .4);
+      }
+
+      /* ─── Segment (Fixed / Dynamic) ─── */
       .tpred-segment-row {
         display: flex;
         align-items: center;
@@ -186,44 +271,49 @@
         min-width: 130px;
         color: var(--tpred-text-muted);
         font-size: 12px;
+        font-weight: 500;
       }
       .tpred-segment {
         display: inline-flex;
         align-items: center;
-        border: 1px solid rgba(145, 71, 255, .52);
-        border-radius: 8px;
+        border: 1px solid rgba(145, 71, 255, .35);
+        border-radius: var(--tpred-radius);
         overflow: hidden;
-        background: rgba(145, 71, 255, .14);
-        box-shadow: 0 0 0 1px rgba(145, 71, 255, .14) inset;
+        background: rgba(145, 71, 255, .06);
       }
       .tpred-segment-btn {
-        min-width: 96px;
+        min-width: 90px;
         height: 32px;
-        padding: 0;
+        padding: 0 .6rem;
         border: 0;
-        background: linear-gradient(180deg, rgba(169,112,255,.24), rgba(145,71,255,.18));
-        color: #e8d8ff;
+        background: transparent;
+        color: var(--tpred-text-muted);
         font-size: 12px;
-        font-weight: 700;
+        font-weight: 600;
         cursor: pointer;
-        transition: background .15s ease, color .15s ease;
+        transition: background .2s ease, color .2s ease, box-shadow .2s ease;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         line-height: 1;
         text-align: center;
+        font-family: inherit;
       }
       .tpred-segment-btn + .tpred-segment-btn {
-        border-left: 1px solid rgba(145, 71, 255, .52);
+        border-left: 1px solid rgba(145, 71, 255, .35);
       }
       .tpred-segment-btn.tpred-active {
-        background: linear-gradient(180deg, rgba(175,120,255,.55), rgba(151,77,255,.45));
+        background: linear-gradient(180deg, rgba(145, 71, 255, .7), rgba(120, 50, 220, .65));
         color: #fff;
+        box-shadow: 0 0 10px rgba(145, 71, 255, .2) inset;
+        text-shadow: 0 1px 2px rgba(0,0,0,.25);
       }
       .tpred-segment-btn:not(.tpred-active):hover {
-        background: linear-gradient(180deg, rgba(169,112,255,.38), rgba(145,71,255,.3));
-        color: #fff;
+        background: rgba(145, 71, 255, .15);
+        color: var(--tpred-text);
       }
+
+      /* ─── Checkbox Toggle ─── */
       .tpred-toggle {
         display: inline-flex;
         align-items: center;
@@ -231,21 +321,22 @@
         cursor: pointer;
         user-select: none;
         padding: .3rem .4rem;
-        border-radius: var(--border-radius-small);
+        border-radius: 6px;
         transition: background .15s ease;
       }
-      .tpred-toggle:hover { background: rgba(255, 255, 255, .06); }
+      .tpred-toggle:hover { background: rgba(255, 255, 255, .04); }
       .tpred-toggle input[type="checkbox"] {
         width: 18px;
         height: 18px;
         margin: 0;
         appearance: none;
         -webkit-appearance: none;
-        border: 2px solid var(--tpred-border-strong);
-        border-radius: 4px;
+        border: 2px solid rgba(255, 255, 255, .2);
+        border-radius: 5px;
         position: relative;
-        background: var(--tpred-surface);
-        transition: border-color .15s ease, background .15s ease, box-shadow .15s ease, transform .12s ease;
+        background: rgba(0, 0, 0, .3);
+        cursor: pointer;
+        transition: border-color .2s ease, background .2s ease, box-shadow .2s ease, transform .15s cubic-bezier(.34,1.56,.64,1);
       }
       .tpred-toggle input[type="checkbox"]::before {
         content: "";
@@ -259,31 +350,40 @@
         transform: rotate(45deg) scale(0);
         transform-origin: center;
         opacity: 0;
-        transition: transform .12s ease-in-out, opacity .12s ease-in-out;
+        transition: transform .18s cubic-bezier(.34,1.56,.64,1), opacity .15s ease;
       }
       .tpred-toggle input[type="checkbox"]:checked {
         background: var(--tpred-accent);
         border-color: var(--tpred-accent);
-        box-shadow: 0 0 0 2px rgba(145, 71, 255, .28);
+        box-shadow: 0 0 0 3px rgba(145, 71, 255, .2), 0 0 8px rgba(145, 71, 255, .15);
+        transform: scale(1);
       }
       .tpred-toggle input[type="checkbox"]:checked::before {
         transform: rotate(45deg) scale(1);
         opacity: 1;
       }
-      .tpred-toggle input[type="checkbox"]:active { transform: scale(.96); }
-      .tpred-toggle span { color: var(--tpred-text); font-size: 13px; }
+      .tpred-toggle input[type="checkbox"]:active {
+        transform: scale(.88);
+      }
+      .tpred-toggle span {
+        color: var(--tpred-text);
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      /* ─── Master Toggle (Enable Auto-Bet) ─── */
       .tpred-master-toggle {
         display: inline-flex;
         align-items: center;
         gap: .7rem;
         cursor: pointer;
         user-select: none;
-        padding: .35rem .4rem;
-        border-radius: 10px;
+        padding: .4rem .5rem;
+        border-radius: var(--tpred-radius);
         transition: background .15s ease;
       }
       .tpred-master-toggle:hover {
-        background: rgba(145, 71, 255, .12);
+        background: rgba(145, 71, 255, .08);
       }
       .tpred-master-toggle input[type="checkbox"] {
         position: absolute;
@@ -293,13 +393,13 @@
         pointer-events: none;
       }
       .tpred-master-track {
-        width: 44px;
+        width: 46px;
         height: 24px;
         border-radius: 999px;
-        border: 1px solid rgba(255,255,255,.22);
-        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.16);
+        background: rgba(255,255,255,.08);
         position: relative;
-        transition: background .2s ease, border-color .2s ease;
+        transition: background .25s cubic-bezier(.4,0,.2,1), border-color .25s ease, box-shadow .25s ease;
       }
       .tpred-master-thumb {
         position: absolute;
@@ -309,15 +409,17 @@
         height: 18px;
         border-radius: 999px;
         background: #fff;
-        box-shadow: 0 1px 5px rgba(0,0,0,.32);
-        transition: transform .2s ease;
+        box-shadow: 0 1px 4px rgba(0,0,0,.35);
+        transition: transform .25s cubic-bezier(.4,0,.2,1), box-shadow .25s ease;
       }
       .tpred-master-toggle input[type="checkbox"]:checked + .tpred-master-track {
-        background: linear-gradient(180deg, rgba(175,120,255,.9), rgba(145,71,255,.9));
-        border-color: rgba(145,71,255,.95);
+        background: linear-gradient(135deg, var(--tpred-accent), #7c3aed);
+        border-color: rgba(145,71,255,.8);
+        box-shadow: 0 0 12px rgba(145, 71, 255, .25);
       }
       .tpred-master-toggle input[type="checkbox"]:checked + .tpred-master-track .tpred-master-thumb {
-        transform: translateX(20px);
+        transform: translateX(22px);
+        box-shadow: 0 1px 6px rgba(145, 71, 255, .35);
       }
       .tpred-master-text {
         color: var(--tpred-text);
@@ -325,96 +427,147 @@
         font-weight: 700;
         letter-spacing: .01em;
       }
-      .tpred-native-btn { flex: 1; }
+
+      /* ─── Bet Buttons ─── */
+      .tpred-native-btn {
+        flex: 1;
+        transition: transform .12s ease, box-shadow .2s ease, filter .15s ease;
+      }
       .tpred-native-btn .ScCoreButtonLabel-sc-s7h2b7-0 { display: inline-flex; align-items: center; gap: .35rem; }
-      .tpred-native-btn:hover { filter: brightness(1.06); }
+      .tpred-native-btn:hover {
+        filter: brightness(1.12);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,.3);
+      }
+      .tpred-native-btn:active {
+        transform: translateY(0);
+      }
       .tpred-native-btn.tpred-bot-pending {
-        border-color: #0e7a3e;
-        box-shadow: inset 0 0 0 1px rgba(14,122,62,.45), 0 0 0 1px rgba(14,122,62,.35);
+        border-color: var(--tpred-green);
+        box-shadow: inset 0 0 0 1px rgba(0,184,92,.4), 0 0 12px rgba(0,184,92,.15);
       }
       .tpred-native-btn.tpred-bot-placed {
-        border-color: #1f69ff;
-        box-shadow: inset 0 0 0 1px rgba(31,105,255,.5), 0 0 0 1px rgba(31,105,255,.45);
-        filter: brightness(1.04);
+        border-color: var(--tpred-blue);
+        box-shadow: inset 0 0 0 1px rgba(56,122,255,.45), 0 0 12px rgba(56,122,255,.15);
+        filter: brightness(1.06);
       }
+
+      /* ─── Status Block ─── */
       #tpred-status {
-        margin-bottom: .5rem;
-        padding: .62rem;
-        border: 1px solid var(--tpred-border-strong);
-        border-radius: 10px;
-        background: linear-gradient(180deg, rgba(39, 39, 46, .84), rgba(31, 31, 37, .84));
+        margin-bottom: .55rem;
+        padding: .6rem;
+        border: 1px solid var(--tpred-border);
+        border-radius: var(--tpred-radius-lg);
+        background: linear-gradient(180deg, rgba(31, 31, 35, .9), rgba(24, 24, 28, .9));
       }
       .tpred-status-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: .35rem;
+        gap: .3rem;
       }
       .tpred-status-item {
-        background: var(--tpred-surface-2);
+        background: rgba(0, 0, 0, .25);
         border: 1px solid var(--tpred-border);
-        border-radius: 8px;
-        padding: .35rem .44rem;
+        border-radius: var(--tpred-radius);
+        padding: .38rem .48rem;
+        transition: background .15s ease, border-color .15s ease;
+      }
+      .tpred-status-item:hover {
+        background: rgba(145, 71, 255, .06);
+        border-color: rgba(145, 71, 255, .2);
       }
       .tpred-status-label {
         display: block;
         color: var(--tpred-text-muted);
-        font-size: 10px;
+        font-size: 9px;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: .05em;
+        letter-spacing: .07em;
       }
       .tpred-status-value {
         display: block;
         color: var(--tpred-text);
-        font-size: 15px;
-        margin-top: .16rem;
+        font-size: 14px;
+        margin-top: .12rem;
         font-weight: 700;
         letter-spacing: .01em;
       }
+
+      /* ─── Flags / Chips ─── */
       .tpred-status-flags {
         margin-top: .45rem;
         display: flex;
         flex-wrap: wrap;
-        gap: .35rem;
+        gap: .3rem;
       }
       .tpred-flag {
-        padding: .16rem .5rem;
+        padding: .18rem .55rem;
         border-radius: 999px;
-        font-size: 11px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: .02em;
         border: 1px solid var(--tpred-border);
-        background: rgba(255,255,255,.04);
+        background: rgba(255,255,255,.03);
+        transition: background .2s ease, border-color .2s ease;
       }
       .tpred-flag-on {
-        background: rgba(14, 122, 62, .18);
-        border-color: rgba(14, 122, 62, .45);
+        background: rgba(0, 184, 92, .12);
+        border-color: rgba(0, 184, 92, .4);
+        color: #5cff9e;
       }
       .tpred-flag-off {
-        background: rgba(224, 58, 62, .14);
-        border-color: rgba(224, 58, 62, .4);
+        background: rgba(235, 4, 0, .1);
+        border-color: rgba(235, 4, 0, .35);
+        color: #ff7a78;
       }
       .tpred-flag-owner {
-        background: rgba(145, 71, 255, .18);
-        border-color: rgba(145, 71, 255, .5);
+        background: rgba(145, 71, 255, .14);
+        border-color: rgba(145, 71, 255, .45);
+        color: var(--tpred-accent-muted);
       }
       .tpred-flag-observer {
-        background: rgba(255, 255, 255, .08);
-        border-color: rgba(255, 255, 255, .24);
+        background: rgba(255, 255, 255, .05);
+        border-color: rgba(255, 255, 255, .18);
+        color: var(--tpred-text-muted);
       }
       .tpred-reason {
-        margin-top: .52rem;
-        font-size: 13px;
+        margin-top: .5rem;
+        font-size: 12px;
         color: var(--tpred-text-muted);
-        line-height: 1.35;
+        line-height: 1.4;
+        font-style: italic;
+        opacity: .85;
       }
+
+      /* ─── Prediction Card ─── */
       .tpred-prediction {
         border: 1px solid var(--tpred-border);
-        border-radius: 10px;
-        padding: .5rem;
+        border-radius: var(--tpred-radius-lg);
+        padding: .55rem .6rem;
         margin: .5rem 0;
-        background: linear-gradient(180deg, rgba(44, 44, 50, .75), rgba(33, 33, 39, .75));
+        background: linear-gradient(180deg, rgba(31, 31, 35, .7), rgba(20, 20, 24, .7));
       }
-      .tpred-outcome { display: flex; justify-content: space-between; font-size: .9rem; margin: .15rem 0; }
-      .tpred-subtitle { margin-top: .65rem; margin-bottom: .35rem; font-weight: 600; }
+      .tpred-outcome {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        font-weight: 500;
+        margin: .2rem 0;
+        padding: .25rem .4rem;
+        border-radius: 6px;
+        transition: background .15s ease;
+      }
+      .tpred-outcome:hover {
+        background: rgba(255, 255, 255, .04);
+      }
+      .tpred-subtitle {
+        margin-top: .6rem;
+        margin-bottom: .35rem;
+        font-weight: 700;
+        font-size: 13px;
+      }
+
+      /* ─── Logs Header & Container ─── */
       .tpred-logs-header {
         margin-top: 0;
         margin-bottom: .35rem;
@@ -429,41 +582,61 @@
         gap: .35rem;
       }
       .tpred-clear-btn {
-        min-height: 26px;
-        padding: 0 .65rem;
-        border-radius: var(--border-radius-small);
-        font-size: 12px;
+        min-height: 24px;
+        padding: 0 .6rem;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        background: var(--tpred-surface);
+        border: 1px solid var(--tpred-border);
+        color: var(--tpred-text-muted);
+        transition: background .15s ease, color .15s ease;
+      }
+      .tpred-clear-btn:hover {
+        background: rgba(235, 4, 0, .15);
+        color: #ff7a78;
+        border-color: rgba(235, 4, 0, .3);
       }
       .tpred-logs {
-        font-family: monospace;
-        font-size: 12px;
-        line-height: 1.35;
-        background: rgba(13, 13, 16, .9);
+        font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+        font-size: 11px;
+        line-height: 1.5;
+        background: rgba(0, 0, 0, .45);
         border: 1px solid var(--tpred-border);
-        border-radius: 10px;
+        border-radius: var(--tpred-radius);
         min-height: 220px;
         overflow: auto;
-        padding: .45rem;
+        padding: .5rem;
         white-space: pre-wrap;
         flex: 1;
+        color: var(--tpred-text-muted);
       }
+
+      /* ─── Scrollbar ─── */
       .tpred-main::-webkit-scrollbar,
       .tpred-logs-pane::-webkit-scrollbar,
       .tpred-logs::-webkit-scrollbar {
-        width: 8px;
+        width: 6px;
       }
       .tpred-main::-webkit-scrollbar-thumb,
       .tpred-logs-pane::-webkit-scrollbar-thumb,
       .tpred-logs::-webkit-scrollbar-thumb {
-        background: rgba(169, 112, 255, .45);
+        background: rgba(145, 71, 255, .35);
         border-radius: 999px;
+      }
+      .tpred-main::-webkit-scrollbar-thumb:hover,
+      .tpred-logs-pane::-webkit-scrollbar-thumb:hover,
+      .tpred-logs::-webkit-scrollbar-thumb:hover {
+        background: rgba(145, 71, 255, .55);
       }
       .tpred-main::-webkit-scrollbar-track,
       .tpred-logs-pane::-webkit-scrollbar-track,
       .tpred-logs::-webkit-scrollbar-track {
-        background: rgba(255,255,255,.06);
-        border-radius: 999px;
+        background: transparent;
       }
+
+      /* ─── Logs Footer ─── */
       .tpred-logs-footer {
         margin-top: .45rem;
         display: flex;
@@ -471,23 +644,30 @@
         align-items: center;
       }
       .tpred-logs-footer img {
-        width: 52px;
-        height: 52px;
+        width: 48px;
+        height: 48px;
         object-fit: contain;
-        opacity: .9;
-        filter: drop-shadow(0 2px 6px rgba(145, 71, 255, .22));
+        opacity: .85;
+        filter: drop-shadow(0 2px 8px rgba(145, 71, 255, .2));
+        transition: opacity .2s ease, transform .2s ease;
+      }
+      .tpred-logs-footer img:hover {
+        opacity: 1;
+        transform: scale(1.08);
       }
       .tpred-oss-note {
-        margin-top: .45rem;
+        margin-top: .4rem;
         text-align: center;
-        color: #bf94ff;
-        font-size: 11px;
-        line-height: 1.35;
-        opacity: .92;
+        color: var(--tpred-accent-muted);
+        font-size: 10px;
+        line-height: 1.4;
+        opacity: .8;
       }
       .tpred-oss-note p {
         margin: 0;
       }
+
+      /* ─── Bet Outcome Names ─── */
       .tpred-bet-names {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -495,38 +675,54 @@
         margin-top: .35rem;
       }
       .tpred-bet-name {
-        color: #c8a4ff;
+        color: var(--tpred-accent-muted);
         text-align: center;
-        font-size: clamp(11px, 1.1vw, 14px);
+        font-size: clamp(11px, 1.1vw, 13px);
         font-weight: 600;
         line-height: 1.2;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      .tpred-log-line { margin: .2rem 0; }
+      .tpred-log-line {
+        margin: .15rem 0;
+        padding: .1rem .2rem;
+        border-radius: 3px;
+        transition: background .1s ease;
+      }
+      .tpred-log-line:hover {
+        background: rgba(255, 255, 255, .03);
+      }
+
+      /* ─── Bet Outcome Buttons ─── */
       #tpred-bet-0,
       #tpred-bet-1 {
         border: 1px solid transparent;
-        border-radius: 999px;
+        border-radius: var(--tpred-radius);
+        font-weight: 600;
+        transition: all .15s ease;
       }
       #tpred-bet-0 {
-        background: linear-gradient(180deg, rgba(74, 139, 255, .34), rgba(43, 101, 217, .28));
-        border-color: rgba(86, 145, 255, .62);
+        background: linear-gradient(135deg, rgba(56, 122, 255, .3), rgba(30, 80, 200, .25));
+        border-color: rgba(56, 122, 255, .5);
       }
       #tpred-bet-0:hover {
-        background: linear-gradient(180deg, rgba(74, 139, 255, .44), rgba(43, 101, 217, .36));
+        background: linear-gradient(135deg, rgba(56, 122, 255, .45), rgba(30, 80, 200, .38));
+        box-shadow: 0 4px 16px rgba(56, 122, 255, .2);
       }
       #tpred-bet-1 {
-        background: linear-gradient(180deg, rgba(255, 73, 187, .34), rgba(215, 35, 147, .28));
-        border-color: rgba(255, 96, 196, .6);
+        background: linear-gradient(135deg, rgba(240, 43, 138, .3), rgba(200, 20, 110, .25));
+        border-color: rgba(240, 43, 138, .5);
       }
       #tpred-bet-1:hover {
-        background: linear-gradient(180deg, rgba(255, 73, 187, .44), rgba(215, 35, 147, .36));
+        background: linear-gradient(135deg, rgba(240, 43, 138, .45), rgba(200, 20, 110, .38));
+        box-shadow: 0 4px 16px rgba(240, 43, 138, .2);
       }
       #tpred-github { text-decoration: none; }
+
+      /* ─── Responsive ─── */
       @media (max-width: 900px) {
-        .tpred-panel { width: min(96vw, 760px); right: -8px; }
+        .tpred-panel { width: min(96vw, 780px); right: -8px; }
       }
       @media (max-width: 700px) {
         .tpred-panel {
@@ -544,7 +740,7 @@
         }
         .tpred-logs-pane {
           border-right: 0;
-          border-bottom: 1px solid rgba(255,255,255,.06);
+          border-bottom: 1px solid var(--tpred-border);
           padding-right: 0;
           padding-bottom: .6rem;
           margin-bottom: .1rem;
@@ -585,6 +781,7 @@
         </button>
       </div>
       <div id="tpred-panel" class="tpred-panel${T.settings.panelOpen ? "" : " tpred-hidden"}">
+        <div class="tpred-accent-bar"></div>
         <div class="tpred-header">
           <div class="tpred-header-left">
             <p class="CoreText-sc-1txzju1-0 ScTitleText-sc-d9mj2s-0 bqyYtA lbYztg tw-title">Prediction Bot</p>
@@ -625,6 +822,7 @@
           <div id="tpred-main" class="tpred-main">
             <div id="tpred-status" class="CoreText-sc-1txzju1-0"></div>
             <div class="tpred-settings-divider" aria-hidden="true"></div>
+            <div class="tpred-section-label">Automation</div>
             <div class="tpred-row">
               <label class="tpred-master-toggle" for="tpred-enabled">
                 <input id="tpred-enabled" type="checkbox" />
@@ -635,6 +833,7 @@
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-dry-run" type="checkbox"> <span>Dry Run (No bet clicks)</span></label></div>
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-force-min-on-skip" type="checkbox"> <span>Disable Skip (bet Auto Min on skips)</span></label></div>
             <div class="tpred-settings-divider" aria-hidden="true"></div>
+            <div class="tpred-section-label">Strategy</div>
             <div class="tpred-segment-row">
               <span class="tpred-segment-label">Strategy Mode</span>
               <div id="tpred-strategy-mode" class="tpred-segment" role="group" aria-label="Strategy Mode">
@@ -643,9 +842,11 @@
               </div>
             </div>
             <div class="tpred-settings-divider" aria-hidden="true"></div>
+            <div class="tpred-section-label">Discovery</div>
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-auto-popover" type="checkbox"> <span>Auto Open Channel Points</span></label></div>
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-auto-details" type="checkbox"> <span>Auto Open Prediction Details</span></label></div>
             <div class="tpred-settings-divider" aria-hidden="true"></div>
+            <div class="tpred-section-label">Timing</div>
             <div class="tpred-row tpred-inline">
               <label>Discovery Probe (ms)</label>
               <div class="tpred-input-wrap">
@@ -697,6 +898,7 @@
               </div>
             </div>
             <div class="tpred-settings-divider" aria-hidden="true"></div>
+            <div class="tpred-section-label">Betting</div>
             <div id="tpred-prediction" class="tpred-prediction"></div>
             <div class="tpred-bet-names">
               <div id="tpred-bet-name-0" class="tpred-bet-name">Outcome A</div>
