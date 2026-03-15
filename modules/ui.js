@@ -670,33 +670,48 @@
 
       /* ─── Logs Footer ─── */
       .tpred-logs-footer {
-        margin-top: .45rem;
+        margin-top: 1rem;
+        padding-top: .9rem;
+        border-top: 1px dashed rgba(255, 255, 255, 0.08);
         display: flex;
-        justify-content: center;
+        flex-direction: column;
         align-items: center;
+        text-align: center;
       }
       .tpred-logs-footer img {
-        width: 48px;
-        height: 48px;
+        width: 44px;
+        height: 44px;
         object-fit: contain;
-        opacity: .85;
-        filter: drop-shadow(0 2px 8px rgba(145, 71, 255, .2));
-        transition: opacity .2s ease, transform .2s ease;
+        margin-bottom: .4rem;
+        opacity: .95;
+        filter: drop-shadow(0 2px 5px rgba(145, 71, 255, .25));
+        transition: transform .2s cubic-bezier(.4, 0, .2, 1);
       }
       .tpred-logs-footer img:hover {
-        opacity: 1;
-        transform: scale(1.08);
+        transform: scale(1.08) rotate(-4deg);
+      }
+      .tpred-logs-footer-title {
+        color: var(--tpred-text);
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: .02em;
+        margin-bottom: .3rem;
       }
       .tpred-oss-note {
-        margin-top: .4rem;
-        text-align: center;
-        color: var(--tpred-accent-muted);
-        font-size: 10px;
-        line-height: 1.4;
-        opacity: .8;
+        color: var(--tpred-text-muted);
+        font-size: 11px;
+        line-height: 1.45;
+        opacity: .85;
       }
       .tpred-oss-note p {
-        margin: 0;
+        margin: 0 0 .4rem 0;
+      }
+      .tpred-oss-author {
+        color: var(--tpred-accent-muted);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .03em;
+        opacity: .8;
       }
 
       /* ─── Bet Outcome Names ─── */
@@ -882,11 +897,12 @@
             <div id="tpred-logs" class="tpred-logs"></div>
             <div class="tpred-logs-footer">
               <img src="https://i.ibb.co/gbWGc64j/UNDERDOG-TW-PRED.png" alt="Underdog" />
-            </div>
-            <div class="tpred-oss-note">
-              <p>Open-source Twitch Predictions assistant.</p>
-              <p>Underdog strategy with live monitor and auto-bet tools.</p>
-              <p>Author: HimanM</p>
+              <div class="tpred-logs-footer-title">Underdog</div>
+              <div class="tpred-oss-note">
+                <p>Open-source Twitch Predictions assistant.</p>
+                <p>Underdog strategy with live monitor and auto-bet tools.</p>
+              </div>
+              <div class="tpred-oss-author">Author: HimanM</div>
             </div>
           </div>
           <div id="tpred-main" class="tpred-main">
