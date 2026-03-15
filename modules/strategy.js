@@ -60,8 +60,25 @@
     const [a, b] = state.outcomes;
     if (!a || !b) return NO_BET("Could not read two outcomes.");
 
+    // Both sides 0 → truly no data, skip
+    if (a.totalPoints === 0 && b.totalPoints === 0) {
+      return NO_BET("Both outcomes have 0 points — not enough data yet.");
+    }
+
+    // One side has 0 → bet min on the 0-point side (huge payout potential)
     if (a.totalPoints === 0 || b.totalPoints === 0) {
-      return NO_BET("One outcome has 0 points — not enough data yet.");
+      const zeroSide = a.totalPoints === 0 ? a : b;
+      const autoMinBet = T.getAutoMinBet();
+      let amount = Math.min(autoMinBet, state.myAvailablePoints);
+      amount = Math.min(amount, Math.floor(state.myAvailablePoints * 0.5));
+      if (amount <= 0) return NO_BET("Cannot afford min bet for 0-point side.");
+      return {
+        shouldBet: true,
+        outcomeId: zeroSide.id,
+        outcomeTitle: zeroSide.title,
+        amount,
+        reason: `One side has 0 pts — betting min ${amount} on "${zeroSide.title}" for max payout.`,
+      };
     }
 
     const underdog = a.totalPoints < b.totalPoints ? a : b;
