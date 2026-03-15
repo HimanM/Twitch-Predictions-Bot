@@ -686,12 +686,29 @@
       }
       .tpred-log-line {
         margin: .15rem 0;
-        padding: .1rem .2rem;
+        padding: .1rem .25rem;
         border-radius: 3px;
+        border-left: 2px solid transparent;
         transition: background .1s ease;
       }
       .tpred-log-line:hover {
         background: rgba(255, 255, 255, .03);
+      }
+      .tpred-log-line.tpred-log-success {
+        color: #5cff9e;
+        border-left-color: #00b85c;
+      }
+      .tpred-log-line.tpred-log-warn {
+        color: #ffd666;
+        border-left-color: #e6a817;
+      }
+      .tpred-log-line.tpred-log-error {
+        color: #ff7a78;
+        border-left-color: #eb0400;
+      }
+      .tpred-log-line.tpred-log-info {
+        color: var(--tpred-text-muted);
+        border-left-color: transparent;
       }
 
       /* ─── Bet Outcome Buttons ─── */
@@ -808,6 +825,10 @@
               <div class="tpred-logs-actions">
                 <button id="tpred-clear-logs" class="ScCoreButton-sc-ocjdkq-0 glPhvE tpred-clear-btn" type="button">Clear</button>
               </div>
+            </div>
+            <div class="tpred-row" style="margin-top:.15rem;margin-bottom:.3rem;display:flex;gap:.6rem;">
+              <label class="tpred-toggle" style="padding:.2rem .3rem;"><input id="tpred-logs-disabled" type="checkbox"> <span>Mute Logs</span></label>
+              <label class="tpred-toggle" style="padding:.2rem .3rem;"><input id="tpred-autoclear-logs" type="checkbox"> <span>Auto Clear (60s)</span></label>
             </div>
             <div id="tpred-logs" class="tpred-logs"></div>
             <div class="tpred-logs-footer">
@@ -954,6 +975,8 @@
     T.runtime.ui.toggleForceMinOnSkip = root.querySelector("#tpred-force-min-on-skip");
     T.runtime.ui.toggleAutoOpenPopover = root.querySelector("#tpred-auto-popover");
     T.runtime.ui.toggleAutoOpenDetails = root.querySelector("#tpred-auto-details");
+    T.runtime.ui.toggleLogsDisabled = root.querySelector("#tpred-logs-disabled");
+    T.runtime.ui.toggleAutoClear = root.querySelector("#tpred-autoclear-logs");
 
     root.querySelector("#tpred-toggle")?.addEventListener("click", () => {
       T.settings.panelOpen = !T.settings.panelOpen;
@@ -1030,6 +1053,8 @@
     if (T.runtime.ui.toggleForceMinOnSkip) T.runtime.ui.toggleForceMinOnSkip.checked = Boolean(T.settings.forceMinOnSkip);
     if (T.runtime.ui.toggleAutoOpenPopover) T.runtime.ui.toggleAutoOpenPopover.checked = T.settings.autoOpenPopover;
     if (T.runtime.ui.toggleAutoOpenDetails) T.runtime.ui.toggleAutoOpenDetails.checked = T.settings.autoOpenDetails;
+    if (T.runtime.ui.toggleLogsDisabled) T.runtime.ui.toggleLogsDisabled.checked = Boolean(T.settings.logsDisabled);
+    if (T.runtime.ui.toggleAutoClear) T.runtime.ui.toggleAutoClear.checked = Boolean(T.settings.autoClearLogs);
     if (T.runtime.ui.discoveryInterval) T.runtime.ui.discoveryInterval.value = String(T.getDiscoveryIntervalMs());
     if (T.runtime.ui.evalInterval) T.runtime.ui.evalInterval.value = String(T.getEvalIntervalMs());
     if (T.runtime.ui.manualAmount) T.runtime.ui.manualAmount.value = String(T.settings.manualAmount || 100);
@@ -1056,14 +1081,14 @@
     T.runtime.ui.toggleDryRun?.addEventListener("change", () => {
       T.settings.dryRun = T.runtime.ui.toggleDryRun.checked;
       T.saveSettings();
-      T.log(`Dry Run ${T.settings.dryRun ? "enabled" : "disabled"}.`);
+      T.log(`Dry Run ${T.settings.dryRun ? "enabled" : "disabled"}.`, "info");
       T.logModeSnapshot("Mode updated");
     });
 
     T.runtime.ui.toggleForceMinOnSkip?.addEventListener("change", () => {
       T.settings.forceMinOnSkip = T.runtime.ui.toggleForceMinOnSkip.checked;
       T.saveSettings();
-      T.log(`Disable Skip ${T.settings.forceMinOnSkip ? "enabled" : "disabled"}.`);
+      T.log(`Disable Skip ${T.settings.forceMinOnSkip ? "enabled" : "disabled"}.`, "info");
     });
 
     T.runtime.ui.strategyMode?.addEventListener("click", (event) => {
@@ -1075,7 +1100,7 @@
       T.settings.strategyMode = nextMode;
       T.saveSettings();
       applyStrategyModeToUi();
-      T.log(`Strategy mode updated: ${nextMode}.`);
+      T.log(`Strategy mode updated: ${nextMode}.`, "info");
       T.evaluate();
       renderUi();
     });
@@ -1083,14 +1108,43 @@
     T.runtime.ui.toggleAutoOpenPopover?.addEventListener("change", () => {
       T.settings.autoOpenPopover = T.runtime.ui.toggleAutoOpenPopover.checked;
       T.saveSettings();
-      T.log(`Auto Open Channel Points ${T.settings.autoOpenPopover ? "enabled" : "disabled"}.`);
+      T.log(`Auto Open Channel Points ${T.settings.autoOpenPopover ? "enabled" : "disabled"}.`, "info");
     });
 
     T.runtime.ui.toggleAutoOpenDetails?.addEventListener("change", () => {
       T.settings.autoOpenDetails = T.runtime.ui.toggleAutoOpenDetails.checked;
       T.saveSettings();
-      T.log(`Auto Open Prediction Details ${T.settings.autoOpenDetails ? "enabled" : "disabled"}.`);
+      T.log(`Auto Open Prediction Details ${T.settings.autoOpenDetails ? "enabled" : "disabled"}.`, "info");
     });
+
+    T.runtime.ui.toggleLogsDisabled?.addEventListener("change", () => {
+      T.settings.logsDisabled = T.runtime.ui.toggleLogsDisabled.checked;
+      T.saveSettings();
+    });
+
+    T.runtime.ui.toggleAutoClear?.addEventListener("change", () => {
+      T.settings.autoClearLogs = T.runtime.ui.toggleAutoClear.checked;
+      T.saveSettings();
+      if (T.settings.autoClearLogs && !T.runtime.autoClearTimerId) {
+        T.runtime.autoClearTimerId = setInterval(() => {
+          T.runtime.logs = [];
+          T.runtime.lastLogByKey = Object.create(null);
+          renderUi();
+        }, 60000);
+      } else if (!T.settings.autoClearLogs && T.runtime.autoClearTimerId) {
+        clearInterval(T.runtime.autoClearTimerId);
+        T.runtime.autoClearTimerId = null;
+      }
+    });
+
+    // Start autoclear timer if setting was persisted
+    if (T.settings.autoClearLogs && !T.runtime.autoClearTimerId) {
+      T.runtime.autoClearTimerId = setInterval(() => {
+        T.runtime.logs = [];
+        T.runtime.lastLogByKey = Object.create(null);
+        renderUi();
+      }, 60000);
+    }
 
     T.runtime.ui.discoveryInterval?.addEventListener("change", () => {
       const val = Math.max(5000, parseInt(T.runtime.ui.discoveryInterval.value || String(T.CONFIG.DISCOVERY_INTERVAL_MS), 10) || T.CONFIG.DISCOVERY_INTERVAL_MS);
@@ -1100,7 +1154,7 @@
       if (T.runtime.discoveryIntervalId) {
         T.restartDiscoveryLoop();
       }
-      T.log(`Discovery probe updated: ${val} ms.`);
+      T.log(`Discovery probe updated: ${val} ms.`, "info");
     });
 
     T.runtime.ui.evalInterval?.addEventListener("change", () => {
@@ -1112,7 +1166,7 @@
         clearInterval(T.runtime.evalIntervalId);
         T.runtime.evalIntervalId = setInterval(T.evaluate, T.getEvalIntervalMs());
       }
-      T.log(`Active evaluation updated: ${val} ms.`);
+      T.log(`Active evaluation updated: ${val} ms.`, "info");
     });
 
     T.runtime.ui.manualAmount?.addEventListener("change", () => {
@@ -1131,7 +1185,7 @@
       T.settings.autoMinBet = minVal;
       T.runtime.ui.autoMinBet.value = String(minVal);
       T.saveSettings();
-      T.log(`Auto Min Bet updated: ${minVal}.`);
+      T.log(`Auto Min Bet updated: ${minVal}.`, "info");
     });
 
     T.runtime.ui.autoMaxBet?.addEventListener("change", () => {
@@ -1145,7 +1199,7 @@
       }
       T.runtime.ui.autoMaxBet.value = String(maxVal);
       T.saveSettings();
-      T.log(`Auto Max Bet updated: ${maxVal}.`);
+      T.log(`Auto Max Bet updated: ${maxVal}.`, "info");
     });
 
     root.querySelector("#tpred-bet-0")?.addEventListener("click", () => {
@@ -1159,7 +1213,7 @@
     });
 
     renderUi();
-    T.log("Injected control panel into top nav.");
+    T.log("Injected control panel into top nav.", "success");
   }
 
   function updatePanelLayout() {
@@ -1322,9 +1376,15 @@
       T.runtime.ui.prediction.innerHTML = `<div class="CoreText-sc-1txzju1-0">No prediction state detected.</div>`;
     }
 
+    const levelClass = (lvl) => {
+      if (lvl === "success") return " tpred-log-success";
+      if (lvl === "warn") return " tpred-log-warn";
+      if (lvl === "error") return " tpred-log-error";
+      return " tpred-log-info";
+    };
     T.runtime.ui.logs.innerHTML = T.runtime.logs
       .slice(0, 60)
-      .map((l) => `<div class="tpred-log-line">[${T.fmtTime(l.ts)}] ${T.escapeHtml(l.msg)}</div>`)
+      .map((l) => `<div class="tpred-log-line${levelClass(l.level)}">[${T.fmtTime(l.ts)}] ${T.escapeHtml(l.msg)}</div>`)
       .join("");
   }
 

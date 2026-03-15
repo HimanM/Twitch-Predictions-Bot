@@ -73,7 +73,7 @@
 
     T.runtime.lastOpenAttemptAt = now;
     T.click(button);
-    T.log("Opened Channel Points popover.");
+    T.log("Opened Channel Points popover.", "info");
   }
 
   function ensurePredictionDetailsOpen() {
@@ -89,7 +89,7 @@
 
     T.runtime.lastDetailsAttemptAt = now;
     T.click(listButton);
-    T.log("Opened prediction details view.");
+    T.log("Opened prediction details view.", "info");
   }
 
   function hasAlreadyVoted() {
@@ -104,7 +104,7 @@
     if (closeBtn) {
       T.click(closeBtn);
       if (!silent) {
-        T.logChanged("closePanel", "Closed reward center panel.");
+        T.logChanged("closePanel", "Closed reward center panel.", "info");
       }
       return true;
     }

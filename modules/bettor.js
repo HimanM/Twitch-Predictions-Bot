@@ -141,7 +141,7 @@
       if (customToggle && isVisible(customToggle) && (attempt === 0 || attempt % 3 === 0)) {
         click(customToggle);
         if (attempt === 0) {
-          T.log("Opened custom amount mode.");
+          T.log("Opened custom amount mode.", "info");
         }
       }
 
@@ -185,7 +185,7 @@
   function logFirstManualFailure(causeText) {
     if (T.runtime.manualFailureLogged) return;
     T.runtime.manualFailureLogged = true;
-    T.log(`Manual placement failed (first report): ${causeText}`);
+    T.log(`Manual placement failed (first report): ${causeText}`, "error");
   }
 
   async function waitForCustomBetControls() {
@@ -211,19 +211,19 @@
 
   async function executeBet(outcomeId, amount, sourceLabel) {
     if (T.runtime.betInFlight) {
-      T.log("Bet action already in progress; skipping duplicate trigger.");
+      T.log("Bet action already in progress; skipping duplicate trigger.", "warn");
       return false;
     }
 
     T.log(`Bet exec start: source=${sourceLabel}, outcome=${outcomeId}, amount=${amount}.`);
 
     if (T.hasAlreadyVoted()) {
-      T.log("Already voted on this prediction; skipping.");
+      T.log("Already voted on this prediction; skipping.", "warn");
       return false;
     }
 
     if (T.settings.dryRun) {
-      T.log(`Dry-run: would place ${amount} on outcome ${outcomeId} (${sourceLabel}).`);
+      T.log(`Dry-run: would place ${amount} on outcome ${outcomeId} (${sourceLabel}).`, "warn");
       return true;
     }
 
@@ -245,7 +245,7 @@
         input.dispatchEvent(new Event("blur", { bubbles: true }));
         await T.sleep(80);
         click(voteButton);
-        T.log(`Predicted ${amount} via ${sourceLabel} using custom amount.`);
+        T.log(`Predicted ${amount} via ${sourceLabel} using custom amount.`, "success");
         if (sourceLabel === "manual") {
           T.runtime.manualFailureLogged = false;
         }
@@ -258,19 +258,19 @@
       if (sourceLabel === "manual") {
         logFirstManualFailure(causeText);
       } else {
-        T.log(`Custom placement unavailable for ${amount} on outcome ${outcomeId}: ${causeText}`);
+        T.log(`Custom placement unavailable for ${amount} on outcome ${outcomeId}: ${causeText}`, "error");
       }
 
       const quickButton = getQuickOutcomeButton(outcomeId);
       if (quickButton && isVisible(quickButton)) {
         click(quickButton);
         T.log(
-          `Fallback used: clicked quick outcome button for ${sourceLabel} on outcome ${outcomeId}. Intended amount=${amount}.`
+          `Fallback used: clicked quick outcome button for ${sourceLabel} on outcome ${outcomeId}. Intended amount=${amount}.`, "warn"
         );
         return true;
       }
 
-      T.log(`Unable to place ${amount}: custom path failed and fallback button was unavailable.`);
+      T.log(`Unable to place ${amount}: custom path failed and fallback button was unavailable.`, "error");
       return false;
     } finally {
       T.runtime.betInFlight = false;
@@ -283,20 +283,20 @@
     T.ensurePredictionDetailsOpen();
     const st = T.runtime.latestState || T.readPredictionState();
     if (!st) {
-      T.log("Manual bet aborted: prediction state not detected.");
+      T.log("Manual bet aborted: prediction state not detected.", "error");
       return;
     }
     const title = st.outcomes[outcomeId === "0" ? 0 : 1]?.title ?? outcomeId;
-    T.log(`Manual bet requested: ${amount} on ${title}.`);
+    T.log(`Manual bet requested: ${amount} on ${title}.`, "info");
     await executeBet(outcomeId, amount, "manual");
   }
 
   async function placeBet(decision) {
     if (!decision?.shouldBet) {
-      T.log("No bet decision; skipping.");
+      T.log("No bet decision; skipping.", "warn");
       return false;
     }
-    T.log(`Auto bet trigger: ${decision.outcomeTitle}, amount ${decision.amount}.`);
+    T.log(`Auto bet trigger: ${decision.outcomeTitle}, amount ${decision.amount}.`, "success");
     return executeBet(decision.outcomeId, decision.amount, "auto");
   }
 

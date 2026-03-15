@@ -44,6 +44,7 @@
     watchIntervalId: null,
     discoveryIntervalId: null,
     discoveryPending: false,
+    autoClearTimerId: null,
     placedForPredictionKey: null,
     observer: null,
     lastOpenAttemptAt: 0,
@@ -73,6 +74,8 @@
       toggleForceMinOnSkip: null,
       toggleAutoOpenPopover: null,
       toggleAutoOpenDetails: null,
+      toggleLogsDisabled: null,
+      toggleAutoClear: null,
     },
   };
 
@@ -91,6 +94,8 @@
       logsVisible: true,
       panelOpen: false,
       manualAmount: 100,
+      logsDisabled: false,
+      autoClearLogs: false,
     };
 
     try {

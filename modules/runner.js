@@ -106,7 +106,7 @@
     if (T.runtime.ui.toggleEnabled) {
       T.runtime.ui.toggleEnabled.checked = false;
     }
-    log(`Auto-Bet disabled in this tab (${reason}). Another tab is active.`);
+    log(`Auto-Bet disabled in this tab (${reason}). Another tab is active.`, "warn");
     logModeSnapshot("Mode updated");
     T.renderUi();
   }
@@ -141,7 +141,7 @@
       T.saveSettings();
       stopAutomationPolling();
       releaseAutoBetLock();
-      log(`Auto-Bet disabled${sourceLabel ? ` (${sourceLabel})` : ""}. Stopped active loops and discovery polling.`);
+      log(`Auto-Bet disabled${sourceLabel ? ` (${sourceLabel})` : ""}. Stopped active loops and discovery polling.`, "warn");
       logModeSnapshot("Mode updated");
       T.renderUi();
       return false;
@@ -155,7 +155,7 @@
       if (T.runtime.ui.toggleEnabled) {
         T.runtime.ui.toggleEnabled.checked = false;
       }
-      log("Auto-Bet enable blocked: another tab already owns the auto-bet lock.");
+      log("Auto-Bet enable blocked: another tab already owns the auto-bet lock.", "error");
       logModeSnapshot("Mode updated");
       T.renderUi();
       return false;
@@ -164,30 +164,25 @@
     T.settings.enabled = true;
     T.saveSettings();
     startAutomationPolling();
-    log(`Auto-Bet enabled${sourceLabel ? ` (${sourceLabel})` : ""}. Discovery polling resumed.`);
+    log(`Auto-Bet enabled${sourceLabel ? ` (${sourceLabel})` : ""}. Discovery polling resumed.`, "success");
     logModeSnapshot("Mode updated");
     T.renderUi();
     return true;
   }
 
-  function log(...args) {
-    const msg = args
-      .map((a) => (typeof a === "string" ? a : JSON.stringify(a)))
-      .join(" ");
-    const entry = { ts: Date.now(), msg };
+  function log(msg, level) {
+    if (T.settings.logsDisabled) return;
+    const lvl = level || "info";
+    const entry = { ts: Date.now(), msg: String(msg), level: lvl };
     T.runtime.logs.unshift(entry);
-    if (T.runtime.logs.length > 120) T.runtime.logs.length = 120;
-    console.log(T.LOG_PREFIX, ...args);
+    if (T.runtime.logs.length > 80) T.runtime.logs.length = 80;
     T.renderUi();
   }
 
-  function logChanged(key, ...args) {
-    const msg = args
-      .map((a) => (typeof a === "string" ? a : JSON.stringify(a)))
-      .join(" ");
+  function logChanged(key, msg, level) {
     if (T.runtime.lastLogByKey[key] === msg) return;
     T.runtime.lastLogByKey[key] = msg;
-    log(...args);
+    log(msg, level);
   }
 
   function isPollingActive() {
@@ -323,7 +318,7 @@
     if (state.status !== "ACTIVE") {
       clearIntervals();
       T.closeRewardCenterPanel();
-      log(`Prediction no longer active (${state.status}); switched back to discovery mode.`);
+      log(`Prediction no longer active (${state.status}); switched back to discovery mode.`, "warn");
       if (T.settings.enabled) {
         restartDiscoveryLoop();
       }
@@ -343,7 +338,7 @@
     if (withinTrigger) {
       const picked = selectTriggerDecision(state, key);
       if (!picked?.decision) {
-        log("No bettable decision at trigger; skipping.");
+        log("No bettable decision at trigger; skipping.", "warn");
         clearIntervals();
         return;
       }
@@ -355,9 +350,9 @@
       );
 
       clearIntervals();
-      log(`Bet exec: placing ${decision.amount} on ${decision.outcomeTitle}.`);
+      log(`Bet exec: placing ${decision.amount} on ${decision.outcomeTitle}.`, "info");
       const success = await T.placeBet(decision);
-      log(`Bet exec result: ${success ? "success" : "failed"}.`);
+      log(`Bet exec result: ${success ? "success" : "failed"}.`, success ? "success" : "error");
       if (success) {
         T.runtime.lastPlacedBet = {
           predictionKey: key,
@@ -388,7 +383,7 @@
 
     T.runtime.evalIntervalId = setInterval(evaluate, T.getEvalIntervalMs());
     T.runtime.watchIntervalId = setInterval(watchAndExecute, T.CONFIG.WATCH_INTERVAL_MS);
-    log("Prediction loops started.");
+    log("Prediction loops started.", "success");
   }
 
   function checkListStateAndMaybeStart() {
@@ -486,17 +481,17 @@
     if (T.settings.enabled) {
       if (claimAutoBetLock()) {
         startAutomationPolling();
-        log("Auto-Bet is enabled in settings. Automation started.");
+        log("Auto-Bet is enabled in settings. Automation started.", "success");
       } else {
         T.settings.enabled = false;
         T.saveSettings();
-        log("Auto-Bet was enabled in settings, but another tab owns the lock. This tab is observe-only.");
+        log("Auto-Bet was enabled in settings, but another tab owns the lock. This tab is observe-only.", "warn");
       }
     } else {
-      log("Auto-Bet is disabled in settings. Polling is paused.");
+      log("Auto-Bet is disabled in settings. Polling is paused.", "warn");
     }
     logModeSnapshot("Startup mode");
-    log("Script initialized.");
+    log("Script initialized.", "success");
   }
 
   T.log = log;
