@@ -110,8 +110,11 @@
 
     const [a, b] = state.outcomes;
     if (!a || !b) return decision;
-    if (a.totalPoints <= 0 || b.totalPoints <= 0) return decision;
     if (state.myAvailablePoints <= 0) return decision;
+
+    // Honor Disable Skip even when one side temporarily reports 0 points.
+    // If both sides are 0 there is still no usable signal, so keep skip.
+    if (a.totalPoints <= 0 && b.totalPoints <= 0) return decision;
 
     const underdog = a.totalPoints <= b.totalPoints ? a : b;
     const minBet = T.getAutoMinBet();

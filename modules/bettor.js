@@ -215,6 +215,8 @@
       return false;
     }
 
+    T.log(`Bet exec start: source=${sourceLabel}, outcome=${outcomeId}, amount=${amount}.`);
+
     if (T.hasAlreadyVoted()) {
       T.log("Already voted on this prediction; skipping.");
       return false;

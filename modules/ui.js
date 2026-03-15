@@ -272,6 +272,59 @@
       }
       .tpred-toggle input[type="checkbox"]:active { transform: scale(.96); }
       .tpred-toggle span { color: var(--tpred-text); font-size: 13px; }
+      .tpred-master-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: .7rem;
+        cursor: pointer;
+        user-select: none;
+        padding: .35rem .4rem;
+        border-radius: 10px;
+        transition: background .15s ease;
+      }
+      .tpred-master-toggle:hover {
+        background: rgba(145, 71, 255, .12);
+      }
+      .tpred-master-toggle input[type="checkbox"] {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+        pointer-events: none;
+      }
+      .tpred-master-track {
+        width: 44px;
+        height: 24px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,.22);
+        background: rgba(255,255,255,.12);
+        position: relative;
+        transition: background .2s ease, border-color .2s ease;
+      }
+      .tpred-master-thumb {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        background: #fff;
+        box-shadow: 0 1px 5px rgba(0,0,0,.32);
+        transition: transform .2s ease;
+      }
+      .tpred-master-toggle input[type="checkbox"]:checked + .tpred-master-track {
+        background: linear-gradient(180deg, rgba(175,120,255,.9), rgba(145,71,255,.9));
+        border-color: rgba(145,71,255,.95);
+      }
+      .tpred-master-toggle input[type="checkbox"]:checked + .tpred-master-track .tpred-master-thumb {
+        transform: translateX(20px);
+      }
+      .tpred-master-text {
+        color: var(--tpred-text);
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: .01em;
+      }
       .tpred-native-btn { flex: 1; }
       .tpred-native-btn .ScCoreButtonLabel-sc-s7h2b7-0 { display: inline-flex; align-items: center; gap: .35rem; }
       .tpred-native-btn:hover { filter: brightness(1.06); }
@@ -338,6 +391,14 @@
       .tpred-flag-off {
         background: rgba(224, 58, 62, .14);
         border-color: rgba(224, 58, 62, .4);
+      }
+      .tpred-flag-owner {
+        background: rgba(145, 71, 255, .18);
+        border-color: rgba(145, 71, 255, .5);
+      }
+      .tpred-flag-observer {
+        background: rgba(255, 255, 255, .08);
+        border-color: rgba(255, 255, 255, .24);
       }
       .tpred-reason {
         margin-top: .52rem;
@@ -564,7 +625,13 @@
           <div id="tpred-main" class="tpred-main">
             <div id="tpred-status" class="CoreText-sc-1txzju1-0"></div>
             <div class="tpred-settings-divider" aria-hidden="true"></div>
-            <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-enabled" type="checkbox"> <span>Enable Auto-Bet</span></label></div>
+            <div class="tpred-row">
+              <label class="tpred-master-toggle" for="tpred-enabled">
+                <input id="tpred-enabled" type="checkbox" />
+                <span class="tpred-master-track"><span class="tpred-master-thumb"></span></span>
+                <span class="tpred-master-text">Enable Auto-Bet</span>
+              </label>
+            </div>
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-dry-run" type="checkbox"> <span>Dry Run (No bet clicks)</span></label></div>
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-force-min-on-skip" type="checkbox"> <span>Disable Skip (bet Auto Min on skips)</span></label></div>
             <div class="tpred-settings-divider" aria-hidden="true"></div>
@@ -777,16 +844,11 @@
     applyStrategyModeToUi();
 
     T.runtime.ui.toggleEnabled?.addEventListener("change", () => {
-      T.settings.enabled = T.runtime.ui.toggleEnabled.checked;
-      T.saveSettings();
-      if (T.settings.enabled) {
-        T.startAutomationPolling();
-        T.log("Auto-Bet enabled. Discovery polling resumed.");
-      } else {
-        T.stopAutomationPolling();
-        T.log("Auto-Bet disabled. Stopped active loops and discovery polling.");
+      const nextEnabled = Boolean(T.runtime.ui.toggleEnabled?.checked);
+      T.setAutoBetEnabled(nextEnabled, "UI toggle", true);
+      if (T.runtime.ui.toggleEnabled) {
+        T.runtime.ui.toggleEnabled.checked = T.settings.enabled;
       }
-      T.logModeSnapshot("Mode updated");
     });
 
     T.runtime.ui.toggleDryRun?.addEventListener("change", () => {
@@ -947,6 +1009,10 @@
   function renderUi() {
     if (!T.runtime.ui.root) return;
 
+    if (T.runtime.ui.toggleEnabled) {
+      T.runtime.ui.toggleEnabled.checked = Boolean(T.settings.enabled);
+    }
+
     T.runtime.ui.panel.classList.toggle("tpred-hidden", !T.settings.panelOpen);
     T.runtime.ui.logsPane?.classList.toggle("tpred-hidden-pane", !T.settings.logsVisible);
     if (T.runtime.ui.panelBody) {
@@ -968,6 +1034,9 @@
       : null;
     const skipEnabled = !T.settings.forceMinOnSkip;
     const strategyMode = T.settings.strategyMode === "dynamic" ? "Dynamic" : "Fixed";
+    const ownsLock = typeof T.hasAutoBetLock === "function" ? T.hasAutoBetLock() : false;
+    const lockRole = (T.settings.enabled && ownsLock) ? "Owner" : "Observer";
+    const lockRoleClass = lockRole === "Owner" ? "tpred-flag-owner" : "tpred-flag-observer";
     const stateLabel = st ? st.status : "IDLE";
     const timeLabel = st ? (Number.isFinite(st.secondsLeft) ? `${st.secondsLeft}s` : "-") : "-";
     const pointsLabel = st ? String(st.myAvailablePoints) : "-";
@@ -1003,6 +1072,7 @@
         ${flagChip("Dry-Run", T.settings.dryRun)}
         ${flagChip("Skip", skipEnabled)}
         <span class="tpred-flag">Mode: ${T.escapeHtml(strategyMode)}</span>
+        <span class="tpred-flag ${lockRoleClass}">Role: ${lockRole}</span>
       </div>
       <div class="tpred-reason">Reason: ${T.escapeHtml(reasonLabel)}</div>
     `;

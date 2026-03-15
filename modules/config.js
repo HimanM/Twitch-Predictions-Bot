@@ -16,6 +16,9 @@
     EVAL_INTERVAL_MS: 1000,
     WATCH_INTERVAL_MS: 250,
     DISCOVERY_INTERVAL_MS: 40000,
+    AUTO_BET_LOCK_KEY: "tpred.autobet.lock.v1",
+    AUTO_BET_LOCK_TTL_MS: 6000,
+    AUTO_BET_LOCK_HEARTBEAT_MS: 1500,
     MAX_BET: 1000,
     MAX_AUTO_BET: 1000000,
     TIERS: [
@@ -29,9 +32,14 @@
 
   T.runtime = {
     pendingDecision: null,
+    lastBettableDecision: null,
     latestState: null,
     lastPlacedBet: null,
     betInFlight: false,
+    tabId: null,
+    autoBetLockHeartbeatId: null,
+    autoBetStorageHandler: null,
+    beforeUnloadHandler: null,
     evalIntervalId: null,
     watchIntervalId: null,
     discoveryIntervalId: null,

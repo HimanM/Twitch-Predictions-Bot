@@ -122,10 +122,11 @@
         const span = svg
           ?.closest('[data-test-selector="prediction-summary-stat__content"]')
           ?.querySelector("span");
-        return T.parsePoints(span?.textContent);
+        if (!span) return Number.NaN;
+        return T.parsePoints(span.textContent);
       });
 
-    while (values.length < 2) values.push(0);
+    while (values.length < 2) values.push(Number.NaN);
     return [values[0], values[1]];
   }
 
@@ -138,10 +139,10 @@
       .map((bar) => {
         const label = bar.getAttribute("aria-label") ?? "";
         const match = label.match(/([\d.]+)%\s+of votes/i);
-        return match ? parseFloat(match[1]) : 0;
+        return match ? parseFloat(match[1]) : Number.NaN;
       });
 
-    while (values.length < 2) values.push(0);
+    while (values.length < 2) values.push(Number.NaN);
     return [values[0], values[1]];
   }
 
@@ -216,10 +217,18 @@
     const secondsLeft = T.parseTimerText(subtitleText);
 
     const listBars = listItem?.querySelectorAll(".predictions-list-item__outcomes--bar") ?? [];
-    const listPcts = Array.from(listBars).map((el) => parseFloat(el.style.width) || 0);
+    const listPcts = Array.from(listBars).map((el) => {
+      const parsed = parseFloat(el.style.width);
+      return Number.isFinite(parsed) ? parsed : Number.NaN;
+    });
     const detailPcts = readDetailPercents();
-    const pct0 = listPcts[0] || detailPcts[0] || 50;
-    const pct1 = listPcts[1] || detailPcts[1] || 50;
+    const pickPercent = (a, b) => {
+      if (Number.isFinite(a)) return a;
+      if (Number.isFinite(b)) return b;
+      return 50;
+    };
+    const pct0 = pickPercent(listPcts[0], detailPcts[0]);
+    const pct1 = pickPercent(listPcts[1], detailPcts[1]);
 
     const poolEl = listItem?.querySelector(
       '[data-test-selector="predictions-list-item__total-points"]'
@@ -229,8 +238,12 @@
     const detailPts = readDetailPoints();
     if (!totalPool) totalPool = detailPts[0] + detailPts[1];
 
-    const pts0 = detailPts[0] || Math.round((totalPool * pct0) / 100);
-    const pts1 = detailPts[1] || Math.round((totalPool * pct1) / 100);
+    const pickPoints = (points, percent) => {
+      if (Number.isFinite(points)) return points;
+      return Math.round((totalPool * percent) / 100);
+    };
+    const pts0 = pickPoints(detailPts[0], pct0);
+    const pts1 = pickPoints(detailPts[1], pct1);
 
     const titles = readOutcomeTitles();
 
