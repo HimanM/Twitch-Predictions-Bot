@@ -296,6 +296,7 @@
   }
 
   async function watchAndExecute() {
+   try {
     T.ensureUi();
     T.ensurePredictionUiOpen();
     T.ensurePredictionDetailsOpen();
@@ -367,6 +368,11 @@
       );
 
       clearIntervals();
+      // Claim the prediction key early, BEFORE the async placeBet call.
+      // This prevents the MutationObserver from restarting loops during the
+      // microtask window between executeBet's finally (betInFlight=false)
+      // and this function setting placedForPredictionKey.
+      T.runtime.placedForPredictionKey = key;
       log(`Bet exec: placing ${decision.amount} on ${decision.outcomeTitle}.`, "info");
       const success = await T.placeBet(decision);
       log(`Bet exec result: ${success ? "success" : "failed"}.`, success ? "success" : "error");
@@ -377,7 +383,9 @@
           amount: decision.amount,
           at: Date.now(),
         };
-        T.runtime.placedForPredictionKey = key;
+      } else {
+        // Rollback: allow retry if the bet actually failed
+        T.runtime.placedForPredictionKey = null;
       }
       if (T.settings.enabled) {
         // Wait for the prediction to expire + 5s buffer before resuming discovery
@@ -405,6 +413,9 @@
       }
       return;
     }
+   } catch (err) {
+    log(`[watch] ERROR: ${err?.message || err}`, "error");
+   }
   }
 
   function startLoopsIfNeeded() {
