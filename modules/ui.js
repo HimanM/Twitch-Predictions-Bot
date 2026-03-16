@@ -1330,9 +1330,13 @@
   function renderUi() {
     if (!T.runtime.ui.root) return;
 
-    // Skip heavy DOM updates while the user is typing in an input
+    // Skip heavy DOM updates only while the user is typing in a number input
     const focused = document.activeElement;
-    if (focused && focused.tagName === "INPUT" && T.runtime.ui.panelMain?.contains(focused)) {
+    if (
+      focused instanceof HTMLInputElement &&
+      focused.type === "number" &&
+      T.runtime.ui.panelMain?.contains(focused)
+    ) {
       return;
     }
 
