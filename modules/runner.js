@@ -319,16 +319,6 @@
       return;
     }
 
-    if (state.status !== "ACTIVE") {
-      clearIntervals();
-      T.closeRewardCenterPanel();
-      log(`Prediction no longer active (${state.status}); switched back to discovery mode.`, "warn");
-      if (T.settings.enabled) {
-        restartDiscoveryLoop();
-      }
-      return;
-    }
-
     const secondsLeft = Number(state.secondsLeft);
     const pendingSeconds = Number(T.runtime.pendingDecision?.secondsLeft);
     const withinTrigger = (
@@ -339,18 +329,41 @@
       T.runtime.pendingDecision?.predictionKey === key
     );
 
-    if (withinTrigger) {
+    // Last-chance trigger: if the prediction JUST locked but we had a recent
+    // bettable decision within the trigger window, attempt to bet anyway.
+    const lastBettable = T.runtime.lastBettableDecision;
+    const lastChanceTrigger = Boolean(
+      !withinTrigger &&
+      state.status !== "ACTIVE" &&
+      lastBettable?.shouldBet &&
+      lastBettable.predictionKey === key &&
+      Number.isFinite(lastBettable.secondsLeft) &&
+      lastBettable.secondsLeft <= T.CONFIG.BET_TRIGGER_SECONDS &&
+      (Date.now() - (lastBettable.snapshotAt || 0)) <= 15000
+    );
+
+    if (withinTrigger || lastChanceTrigger) {
       const picked = selectTriggerDecision(state, key);
       if (!picked?.decision) {
-        log("No bettable decision at trigger; skipping.", "warn");
+        log(
+          lastChanceTrigger
+            ? `Last-chance trigger (${state.status}) but no bettable decision; giving up.`
+            : "No bettable decision at trigger; skipping.",
+          "warn"
+        );
         clearIntervals();
+        if (state.status !== "ACTIVE" && T.settings.enabled) {
+          T.closeRewardCenterPanel();
+          restartDiscoveryLoop();
+        }
         return;
       }
       const { decision, source, ageMs } = picked;
 
       log(
         `Trigger decision: source=${source}, outcome=${decision.outcomeTitle}, amount=${decision.amount}` +
-        `${source === "fallback" ? `, ageMs=${ageMs}` : ""}.`
+        `${source === "fallback" ? `, ageMs=${ageMs}` : ""}` +
+        `${lastChanceTrigger ? ` (last-chance, status=${state.status})` : ""}.`
       );
 
       clearIntervals();
@@ -380,6 +393,17 @@
           }
         }, waitSec * 1000);
       }
+      return;
+    }
+
+    if (state.status !== "ACTIVE") {
+      clearIntervals();
+      T.closeRewardCenterPanel();
+      log(`Prediction no longer active (${state.status}); switched back to discovery mode.`, "warn");
+      if (T.settings.enabled) {
+        restartDiscoveryLoop();
+      }
+      return;
     }
   }
 
