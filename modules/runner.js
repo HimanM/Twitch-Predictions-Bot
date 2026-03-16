@@ -215,6 +215,10 @@
       clearInterval(T.runtime.discoveryIntervalId);
       T.runtime.discoveryIntervalId = null;
     }
+    if (T.runtime.postBetTimerId) {
+      clearTimeout(T.runtime.postBetTimerId);
+      T.runtime.postBetTimerId = null;
+    }
     T.runtime.discoveryPending = false;
   }
 
@@ -363,7 +367,18 @@
         T.runtime.placedForPredictionKey = key;
       }
       if (T.settings.enabled) {
-        restartDiscoveryLoop();
+        // Wait for the prediction to expire + 5s buffer before resuming discovery
+        const waitSec = (Number.isFinite(secondsLeft) ? secondsLeft : 0) + 5;
+        if (T.runtime.postBetTimerId) clearTimeout(T.runtime.postBetTimerId);
+        log(`Bet placed. Waiting ${waitSec}s before resuming discovery.`, "info");
+        T.runtime.postBetTimerId = setTimeout(() => {
+          T.runtime.postBetTimerId = null;
+          if (T.settings.enabled) {
+            T.closeRewardCenterPanel();
+            restartDiscoveryLoop();
+            log("Post-bet wait complete. Discovery resumed.", "success");
+          }
+        }, waitSec * 1000);
       }
     }
   }
@@ -371,19 +386,27 @@
   function startLoopsIfNeeded() {
     if (!T.settings.enabled) return;
     if (T.runtime.evalIntervalId || T.runtime.watchIntervalId) return;
+    if (T.runtime.postBetTimerId) return; // waiting for post-bet cooldown
+    if (T.runtime.betInFlight) return; // bet is being placed right now
+
+    // Don't restart loops if we already placed for this prediction
+    const state = T.readPredictionState();
+    if (state && T.runtime.placedForPredictionKey === T.makePredictionKey(state)) return;
 
     if (T.runtime.discoveryIntervalId) {
       clearInterval(T.runtime.discoveryIntervalId);
       T.runtime.discoveryIntervalId = null;
     }
 
-    // Pre-run once so pendingDecision exists quickly.
-    evaluate();
-    watchAndExecute();
-
+    // Set intervals FIRST so that clearIntervals() inside watchAndExecute
+    // (which is async) can actually clear them during bet placement.
     T.runtime.evalIntervalId = setInterval(evaluate, T.getEvalIntervalMs());
     T.runtime.watchIntervalId = setInterval(watchAndExecute, T.CONFIG.WATCH_INTERVAL_MS);
     log("Prediction loops started.", "success");
+
+    // Pre-run once so pendingDecision exists quickly.
+    evaluate();
+    watchAndExecute();
   }
 
   function checkListStateAndMaybeStart() {
@@ -463,9 +486,12 @@
     T.runtime.observer = new MutationObserver(() => {
       if (!T.settings.enabled) return;
       if (T.runtime.evalIntervalId || T.runtime.watchIntervalId) return;
+      if (T.runtime.postBetTimerId) return;
+      if (T.runtime.betInFlight) return;
       T.ensureUi();
       const state = T.readPredictionState();
       if (state?.status === "ACTIVE") {
+        if (T.runtime.placedForPredictionKey === T.makePredictionKey(state)) return;
         startLoopsIfNeeded();
       }
     });

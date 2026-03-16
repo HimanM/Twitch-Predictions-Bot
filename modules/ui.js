@@ -259,33 +259,14 @@
         background: rgba(145, 71, 255, .4);
       }
 
-      /* ─── Confirm Button ─── */
-      .tpred-confirm-btn {
-        width: 28px;
-        height: 32px;
-        border: 1px solid rgba(0, 184, 92, .4);
-        border-radius: var(--tpred-radius);
-        background: rgba(0, 184, 92, .12);
-        color: #5cff9e;
-        padding: 0;
-        line-height: 1;
-        font-size: 15px;
-        font-weight: 700;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        transition: background .15s ease, color .12s ease, transform .1s ease, border-color .15s ease;
-      }
-      .tpred-confirm-btn:hover {
-        background: rgba(0, 184, 92, .25);
-        border-color: rgba(0, 184, 92, .6);
-        color: #fff;
-      }
-      .tpred-confirm-btn:active {
-        transform: scale(.92);
-        background: rgba(0, 184, 92, .35);
+      /* ─── Timing Hint ─── */
+      .tpred-timing-hint {
+        margin-top: .35rem;
+        text-align: right;
+        font-size: 10px;
+        color: var(--tpred-text-muted);
+        opacity: .55;
+        font-style: italic;
       }
 
       /* ─── Segment (Fixed / Dynamic) ─── */
@@ -936,7 +917,6 @@
             <div class="tpred-row tpred-inline">
               <label>Discovery Probe (ms)</label>
               <div class="tpred-input-wrap">
-                <button class="tpred-confirm-btn" type="button" title="Apply">✓</button>
                 <input id="tpred-discovery-ms" type="number" min="5000" step="1000" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
                 <div class="tpred-stepper">
                   <button class="tpred-step-btn" type="button" data-target="tpred-discovery-ms" data-dir="down">-</button>
@@ -947,7 +927,6 @@
             <div class="tpred-row tpred-inline">
               <label>Active Eval (ms)</label>
               <div class="tpred-input-wrap">
-                <button class="tpred-confirm-btn" type="button" title="Apply">✓</button>
                 <input id="tpred-eval-ms" type="number" min="1000" step="250" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
                 <div class="tpred-stepper">
                   <button class="tpred-step-btn" type="button" data-target="tpred-eval-ms" data-dir="down">-</button>
@@ -958,7 +937,6 @@
             <div class="tpred-row tpred-inline">
               <label>Manual Amount</label>
               <div class="tpred-input-wrap">
-                <button class="tpred-confirm-btn" type="button" title="Apply">✓</button>
                 <input id="tpred-manual-amount" type="number" min="1" step="1" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
                 <div class="tpred-stepper">
                   <button class="tpred-step-btn" type="button" data-target="tpred-manual-amount" data-dir="down">-</button>
@@ -969,7 +947,6 @@
             <div class="tpred-row tpred-inline">
               <label>Auto Min Bet</label>
               <div class="tpred-input-wrap">
-                <button class="tpred-confirm-btn" type="button" title="Apply">✓</button>
                 <input id="tpred-auto-min-bet" type="number" min="1" step="1" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
                 <div class="tpred-stepper">
                   <button class="tpred-step-btn" type="button" data-target="tpred-auto-min-bet" data-dir="down">-</button>
@@ -980,7 +957,6 @@
             <div class="tpred-row tpred-inline">
               <label>Auto Max Bet</label>
               <div class="tpred-input-wrap">
-                <button class="tpred-confirm-btn" type="button" title="Apply">✓</button>
                 <input id="tpred-auto-max-bet" type="number" min="1" step="1" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
                 <div class="tpred-stepper">
                   <button class="tpred-step-btn" type="button" data-target="tpred-auto-max-bet" data-dir="down">-</button>
@@ -988,6 +964,7 @@
                 </div>
               </div>
             </div>
+            <div class="tpred-timing-hint">Click outside field or press Enter to apply</div>
             <div class="tpred-settings-divider" aria-hidden="true"></div>
             <div class="tpred-section-label">Betting</div>
             <div class="tpred-bet-names">
@@ -1097,13 +1074,7 @@
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
 
-      // Confirm button: blur the sibling input to trigger its change event
-      if (target.classList.contains("tpred-confirm-btn")) {
-        const wrap = target.closest(".tpred-input-wrap");
-        const input = wrap?.querySelector("input");
-        if (input) { input.blur(); }
-        return;
-      }
+
 
       if (!target.classList.contains("tpred-step-btn")) return;
 
@@ -1123,6 +1094,15 @@
       if (hasMin) next = Math.max(min, next);
       input.value = String(Math.round(next));
       input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    // Enter key on number inputs → blur to apply
+    root.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      const target = event.target;
+      if (target instanceof HTMLInputElement && target.type === "number") {
+        target.blur();
+      }
     });
 
     if (T.runtime.ui.toggleEnabled) T.runtime.ui.toggleEnabled.checked = T.settings.enabled;
