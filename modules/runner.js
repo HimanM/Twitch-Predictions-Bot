@@ -241,6 +241,18 @@
     const state = T.readPredictionState();
     if (!state) return;
 
+    // Region-restricted: can't bet with points. Stop active monitoring and
+    // fall back to discovery, which re-checks periodically in case the user
+    // connects a VPN and the restriction lifts.
+    if (T.isRegionRestricted()) {
+      clearIntervals();
+      logChanged("regionBlock",
+        "Region-restricted: pausing active monitoring. Discovery will re-check periodically.", "warn");
+      T.closeRewardCenterPanel({ silent: true });
+      if (T.settings.enabled) restartDiscoveryLoop();
+      return;
+    }
+
     T.runtime.latestState = state;
 
     const rawDecision = T.decideBet(state);
