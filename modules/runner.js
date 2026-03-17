@@ -332,6 +332,10 @@
       return;
     }
 
+    if (T.isRegionRestricted()) {
+      return;
+    }
+
     const secondsLeft = Number(state.secondsLeft);
     const pendingSeconds = Number(T.runtime.pendingDecision?.secondsLeft);
     const withinTrigger = (
@@ -439,6 +443,10 @@
     // Don't restart loops if we already placed for this prediction
     const state = T.readPredictionState();
     if (state && T.runtime.placedForPredictionKey === T.makePredictionKey(state)) return;
+
+    // Don't start active loops for region-restricted predictions.
+    // Discovery will re-check periodically in case the restriction lifts.
+    if (T.isRegionRestricted()) return;
 
     if (T.runtime.discoveryIntervalId) {
       clearInterval(T.runtime.discoveryIntervalId);
