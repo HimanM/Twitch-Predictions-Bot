@@ -215,6 +215,10 @@
       clearInterval(T.runtime.discoveryIntervalId);
       T.runtime.discoveryIntervalId = null;
     }
+    if (T.runtime.postBetTimerId) {
+      clearTimeout(T.runtime.postBetTimerId);
+      T.runtime.postBetTimerId = null;
+    }
     T.runtime.discoveryPending = false;
   }
 
@@ -236,6 +240,18 @@
 
     const state = T.readPredictionState();
     if (!state) return;
+
+    // Region-restricted: can't bet with points. Stop active monitoring and
+    // fall back to discovery, which re-checks periodically in case the user
+    // connects a VPN and the restriction lifts.
+    if (T.isRegionRestricted()) {
+      clearIntervals();
+      logChanged("regionBlock",
+        "Region-restricted: pausing active monitoring. Discovery will re-check periodically.", "warn");
+      T.closeRewardCenterPanel({ silent: true });
+      if (T.settings.enabled) restartDiscoveryLoop();
+      return;
+    }
 
     T.runtime.latestState = state;
 
@@ -292,6 +308,7 @@
   }
 
   async function watchAndExecute() {
+   try {
     T.ensureUi();
     T.ensurePredictionUiOpen();
     T.ensurePredictionDetailsOpen();
@@ -315,16 +332,6 @@
       return;
     }
 
-    if (state.status !== "ACTIVE") {
-      clearIntervals();
-      T.closeRewardCenterPanel();
-      log(`Prediction no longer active (${state.status}); switched back to discovery mode.`, "warn");
-      if (T.settings.enabled) {
-        restartDiscoveryLoop();
-      }
-      return;
-    }
-
     const secondsLeft = Number(state.secondsLeft);
     const pendingSeconds = Number(T.runtime.pendingDecision?.secondsLeft);
     const withinTrigger = (
@@ -335,21 +342,49 @@
       T.runtime.pendingDecision?.predictionKey === key
     );
 
-    if (withinTrigger) {
+    // Last-chance trigger: if the prediction JUST locked but we had a recent
+    // bettable decision within the trigger window, attempt to bet anyway.
+    const lastBettable = T.runtime.lastBettableDecision;
+    const lastChanceTrigger = Boolean(
+      !withinTrigger &&
+      state.status !== "ACTIVE" &&
+      lastBettable?.shouldBet &&
+      lastBettable.predictionKey === key &&
+      Number.isFinite(lastBettable.secondsLeft) &&
+      lastBettable.secondsLeft <= T.CONFIG.BET_TRIGGER_SECONDS &&
+      (Date.now() - (lastBettable.snapshotAt || 0)) <= 15000
+    );
+
+    if (withinTrigger || lastChanceTrigger) {
       const picked = selectTriggerDecision(state, key);
       if (!picked?.decision) {
-        log("No bettable decision at trigger; skipping.", "warn");
+        log(
+          lastChanceTrigger
+            ? `Last-chance trigger (${state.status}) but no bettable decision; giving up.`
+            : "No bettable decision at trigger; skipping.",
+          "warn"
+        );
         clearIntervals();
+        if (state.status !== "ACTIVE" && T.settings.enabled) {
+          T.closeRewardCenterPanel();
+          restartDiscoveryLoop();
+        }
         return;
       }
       const { decision, source, ageMs } = picked;
 
       log(
         `Trigger decision: source=${source}, outcome=${decision.outcomeTitle}, amount=${decision.amount}` +
-        `${source === "fallback" ? `, ageMs=${ageMs}` : ""}.`
+        `${source === "fallback" ? `, ageMs=${ageMs}` : ""}` +
+        `${lastChanceTrigger ? ` (last-chance, status=${state.status})` : ""}.`
       );
 
       clearIntervals();
+      // Claim the prediction key early, BEFORE the async placeBet call.
+      // This prevents the MutationObserver from restarting loops during the
+      // microtask window between executeBet's finally (betInFlight=false)
+      // and this function setting placedForPredictionKey.
+      T.runtime.placedForPredictionKey = key;
       log(`Bet exec: placing ${decision.amount} on ${decision.outcomeTitle}.`, "info");
       const success = await T.placeBet(decision);
       log(`Bet exec result: ${success ? "success" : "failed"}.`, success ? "success" : "error");
@@ -360,30 +395,65 @@
           amount: decision.amount,
           at: Date.now(),
         };
-        T.runtime.placedForPredictionKey = key;
+      } else {
+        // Rollback: allow retry if the bet actually failed
+        T.runtime.placedForPredictionKey = null;
       }
+      if (T.settings.enabled) {
+        // Wait for the prediction to expire + 5s buffer before resuming discovery
+        const waitSec = (Number.isFinite(secondsLeft) ? secondsLeft : 0) + 5;
+        if (T.runtime.postBetTimerId) clearTimeout(T.runtime.postBetTimerId);
+        log(`Bet placed. Waiting ${waitSec}s before resuming discovery.`, "info");
+        T.runtime.postBetTimerId = setTimeout(() => {
+          T.runtime.postBetTimerId = null;
+          if (T.settings.enabled) {
+            T.closeRewardCenterPanel();
+            restartDiscoveryLoop();
+            log("Post-bet wait complete. Discovery resumed.", "success");
+          }
+        }, waitSec * 1000);
+      }
+      return;
+    }
+
+    if (state.status !== "ACTIVE") {
+      clearIntervals();
+      T.closeRewardCenterPanel();
+      log(`Prediction no longer active (${state.status}); switched back to discovery mode.`, "warn");
       if (T.settings.enabled) {
         restartDiscoveryLoop();
       }
+      return;
     }
+   } catch (err) {
+    log(`[watch] ERROR: ${err?.message || err}`, "error");
+   }
   }
 
   function startLoopsIfNeeded() {
     if (!T.settings.enabled) return;
     if (T.runtime.evalIntervalId || T.runtime.watchIntervalId) return;
+    if (T.runtime.postBetTimerId) return; // waiting for post-bet cooldown
+    if (T.runtime.betInFlight) return; // bet is being placed right now
+
+    // Don't restart loops if we already placed for this prediction
+    const state = T.readPredictionState();
+    if (state && T.runtime.placedForPredictionKey === T.makePredictionKey(state)) return;
 
     if (T.runtime.discoveryIntervalId) {
       clearInterval(T.runtime.discoveryIntervalId);
       T.runtime.discoveryIntervalId = null;
     }
 
-    // Pre-run once so pendingDecision exists quickly.
-    evaluate();
-    watchAndExecute();
-
+    // Set intervals FIRST so that clearIntervals() inside watchAndExecute
+    // (which is async) can actually clear them during bet placement.
     T.runtime.evalIntervalId = setInterval(evaluate, T.getEvalIntervalMs());
     T.runtime.watchIntervalId = setInterval(watchAndExecute, T.CONFIG.WATCH_INTERVAL_MS);
     log("Prediction loops started.", "success");
+
+    // Pre-run once so pendingDecision exists quickly.
+    evaluate();
+    watchAndExecute();
   }
 
   function checkListStateAndMaybeStart() {
@@ -463,9 +533,12 @@
     T.runtime.observer = new MutationObserver(() => {
       if (!T.settings.enabled) return;
       if (T.runtime.evalIntervalId || T.runtime.watchIntervalId) return;
+      if (T.runtime.postBetTimerId) return;
+      if (T.runtime.betInFlight) return;
       T.ensureUi();
       const state = T.readPredictionState();
       if (state?.status === "ACTIVE") {
+        if (T.runtime.placedForPredictionKey === T.makePredictionKey(state)) return;
         startLoopsIfNeeded();
       }
     });

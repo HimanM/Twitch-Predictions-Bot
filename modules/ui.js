@@ -259,6 +259,16 @@
         background: rgba(145, 71, 255, .4);
       }
 
+      /* ─── Timing Hint ─── */
+      .tpred-timing-hint {
+        margin-top: .35rem;
+        text-align: right;
+        font-size: 10px;
+        color: var(--tpred-text-muted);
+        opacity: .55;
+        font-style: italic;
+      }
+
       /* ─── Segment (Fixed / Dynamic) ─── */
       .tpred-segment-row {
         display: flex;
@@ -641,33 +651,48 @@
 
       /* ─── Logs Footer ─── */
       .tpred-logs-footer {
-        margin-top: .45rem;
+        margin-top: 1rem;
+        padding-top: .9rem;
+        border-top: 1px dashed rgba(255, 255, 255, 0.08);
         display: flex;
-        justify-content: center;
+        flex-direction: column;
         align-items: center;
+        text-align: center;
       }
       .tpred-logs-footer img {
-        width: 48px;
-        height: 48px;
+        width: 44px;
+        height: 44px;
         object-fit: contain;
-        opacity: .85;
-        filter: drop-shadow(0 2px 8px rgba(145, 71, 255, .2));
-        transition: opacity .2s ease, transform .2s ease;
+        margin-bottom: .4rem;
+        opacity: .95;
+        filter: drop-shadow(0 2px 5px rgba(145, 71, 255, .25));
+        transition: transform .2s cubic-bezier(.4, 0, .2, 1);
       }
       .tpred-logs-footer img:hover {
-        opacity: 1;
-        transform: scale(1.08);
+        transform: scale(1.08) rotate(-4deg);
+      }
+      .tpred-logs-footer-title {
+        color: var(--tpred-text);
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: .02em;
+        margin-bottom: .3rem;
       }
       .tpred-oss-note {
-        margin-top: .4rem;
-        text-align: center;
-        color: var(--tpred-accent-muted);
-        font-size: 10px;
-        line-height: 1.4;
-        opacity: .8;
+        color: var(--tpred-text-muted);
+        font-size: 11px;
+        line-height: 1.45;
+        opacity: .85;
       }
       .tpred-oss-note p {
-        margin: 0;
+        margin: 0 0 .4rem 0;
+      }
+      .tpred-oss-author {
+        color: var(--tpred-accent-muted);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .03em;
+        opacity: .8;
       }
 
       /* ─── Bet Outcome Names ─── */
@@ -678,14 +703,31 @@
         margin-top: .35rem;
       }
       .tpred-bet-name {
-        color: var(--tpred-accent-muted);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         text-align: center;
-        font-size: clamp(11px, 1.1vw, 13px);
+        gap: .1rem;
+        min-width: 0;
+        overflow: hidden;
+      }
+      .tpred-bet-name-title {
+        color: var(--tpred-accent-muted);
         font-weight: 600;
-        line-height: 1.2;
-        white-space: nowrap;
+        line-height: 1.25;
         overflow: hidden;
         text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        max-width: 100%;
+      }
+      .tpred-bet-name-pts {
+        color: var(--tpred-text);
+        font-weight: 700;
+        font-size: 13px;
+        line-height: 1.2;
+        opacity: .9;
       }
       .tpred-log-line {
         margin: .15rem 0;
@@ -836,11 +878,12 @@
             <div id="tpred-logs" class="tpred-logs"></div>
             <div class="tpred-logs-footer">
               <img src="https://i.ibb.co/gbWGc64j/UNDERDOG-TW-PRED.png" alt="Underdog" />
-            </div>
-            <div class="tpred-oss-note">
-              <p>Open-source Twitch Predictions assistant.</p>
-              <p>Underdog strategy with live monitor and auto-bet tools.</p>
-              <p>Author: HimanM</p>
+              <div class="tpred-logs-footer-title">UNDERDOG</div>
+              <div class="tpred-oss-note">
+                <p>Open-source Twitch Predictions assistant.</p>
+                <p>Underdog strategy with live monitor and auto-bet tools.</p>
+              </div>
+              <div class="tpred-oss-author">Author: HimanM</div>
             </div>
           </div>
           <div id="tpred-main" class="tpred-main">
@@ -921,12 +964,12 @@
                 </div>
               </div>
             </div>
+            <div class="tpred-timing-hint">Click outside field or press Enter to apply</div>
             <div class="tpred-settings-divider" aria-hidden="true"></div>
             <div class="tpred-section-label">Betting</div>
-            <div id="tpred-prediction" class="tpred-prediction"></div>
             <div class="tpred-bet-names">
-              <div id="tpred-bet-name-0" class="tpred-bet-name">Outcome A</div>
-              <div id="tpred-bet-name-1" class="tpred-bet-name">Outcome B</div>
+              <div id="tpred-bet-name-0" class="tpred-bet-name"><span class="tpred-bet-name-title">Outcome A</span><span class="tpred-bet-name-pts"></span></div>
+              <div id="tpred-bet-name-1" class="tpred-bet-name"><span class="tpred-bet-name-title">Outcome B</span><span class="tpred-bet-name-pts"></span></div>
             </div>
             <div class="tpred-row tpred-inline">
               <button id="tpred-bet-0" class="ScCoreButton-sc-ocjdkq-0 yezmM tpred-native-btn">
@@ -963,7 +1006,6 @@
     T.runtime.ui.logsPane = root.querySelector("#tpred-logs-pane");
     T.runtime.ui.panelBody = root.querySelector(".tpred-body");
     T.runtime.ui.status = root.querySelector("#tpred-status");
-    T.runtime.ui.prediction = root.querySelector("#tpred-prediction");
     T.runtime.ui.logs = root.querySelector("#tpred-logs");
     T.runtime.ui.clearLogs = root.querySelector("#tpred-clear-logs");
     T.runtime.ui.toggleLogs = root.querySelector("#tpred-toggle-logs");
@@ -1031,6 +1073,9 @@
     root.addEventListener("click", (event) => {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
+
+
+
       if (!target.classList.contains("tpred-step-btn")) return;
 
       const inputId = target.dataset?.target;
@@ -1049,6 +1094,15 @@
       if (hasMin) next = Math.max(min, next);
       input.value = String(Math.round(next));
       input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    // Enter key on number inputs → blur to apply
+    root.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      const target = event.target;
+      if (target instanceof HTMLInputElement && target.type === "number") {
+        target.blur();
+      }
     });
 
     if (T.runtime.ui.toggleEnabled) T.runtime.ui.toggleEnabled.checked = T.settings.enabled;
@@ -1265,8 +1319,26 @@
     }
   }
 
+  function dynamicNameSize(text) {
+    const len = (text || "").length;
+    if (len <= 12) return "13px";
+    if (len <= 20) return "12px";
+    if (len <= 30) return "11px";
+    return "10px";
+  }
+
   function renderUi() {
     if (!T.runtime.ui.root) return;
+
+    // Skip heavy DOM updates only while the user is typing in a number input
+    const focused = document.activeElement;
+    if (
+      focused instanceof HTMLInputElement &&
+      focused.type === "number" &&
+      T.runtime.ui.panelMain?.contains(focused)
+    ) {
+      return;
+    }
 
     if (T.runtime.ui.toggleEnabled) {
       T.runtime.ui.toggleEnabled.checked = Boolean(T.settings.enabled);
@@ -1348,8 +1420,18 @@
       const btn1Name = T.runtime.ui.root.querySelector("#tpred-bet-name-1");
       const manualAmount = Math.max(1, parseInt(T.runtime.ui.manualAmount?.value || String(T.settings.manualAmount || 100), 10) || 100);
 
-      if (btn0Name) btn0Name.textContent = a.title;
-      if (btn1Name) btn1Name.textContent = b.title;
+      if (btn0Name) {
+        const t0 = btn0Name.querySelector('.tpred-bet-name-title');
+        const p0 = btn0Name.querySelector('.tpred-bet-name-pts');
+        if (t0) { t0.textContent = a.title; t0.style.fontSize = dynamicNameSize(a.title); }
+        if (p0) p0.textContent = a.totalPoints.toLocaleString();
+      }
+      if (btn1Name) {
+        const t1 = btn1Name.querySelector('.tpred-bet-name-title');
+        const p1 = btn1Name.querySelector('.tpred-bet-name-pts');
+        if (t1) { t1.textContent = b.title; t1.style.fontSize = dynamicNameSize(b.title); }
+        if (p1) p1.textContent = b.totalPoints.toLocaleString();
+      }
       if (btn0Label) btn0Label.textContent = `Bet A ${manualAmount}`;
       if (btn1Label) btn1Label.textContent = `Bet B ${manualAmount}`;
 
@@ -1358,10 +1440,7 @@
       btn0?.classList.toggle("tpred-bot-placed", botPlaced?.outcomeId === "0");
       btn1?.classList.toggle("tpred-bot-placed", botPlaced?.outcomeId === "1");
 
-      T.runtime.ui.prediction.innerHTML = `
-        <div class="tpred-outcome"><span>${a.title}</span><span>${a.totalPoints}</span></div>
-        <div class="tpred-outcome"><span>${b.title}</span><span>${b.totalPoints}</span></div>
-      `;
+
     } else {
       const btn0 = T.runtime.ui.root.querySelector("#tpred-bet-0");
       const btn1 = T.runtime.ui.root.querySelector("#tpred-bet-1");
@@ -1370,13 +1449,23 @@
       const btn0Name = T.runtime.ui.root.querySelector("#tpred-bet-name-0");
       const btn1Name = T.runtime.ui.root.querySelector("#tpred-bet-name-1");
       const manualAmount = Math.max(1, parseInt(T.runtime.ui.manualAmount?.value || String(T.settings.manualAmount || 100), 10) || 100);
-      if (btn0Name) btn0Name.textContent = "Outcome A";
-      if (btn1Name) btn1Name.textContent = "Outcome B";
+      if (btn0Name) {
+        const t0 = btn0Name.querySelector('.tpred-bet-name-title');
+        const p0 = btn0Name.querySelector('.tpred-bet-name-pts');
+        if (t0) { t0.textContent = 'Outcome A'; t0.style.fontSize = '13px'; }
+        if (p0) p0.textContent = '';
+      }
+      if (btn1Name) {
+        const t1 = btn1Name.querySelector('.tpred-bet-name-title');
+        const p1 = btn1Name.querySelector('.tpred-bet-name-pts');
+        if (t1) { t1.textContent = 'Outcome B'; t1.style.fontSize = '13px'; }
+        if (p1) p1.textContent = '';
+      }
       if (btn0Label) btn0Label.textContent = `Bet A ${manualAmount}`;
       if (btn1Label) btn1Label.textContent = `Bet B ${manualAmount}`;
       btn0?.classList.remove("tpred-bot-pending", "tpred-bot-placed");
       btn1?.classList.remove("tpred-bot-pending", "tpred-bot-placed");
-      T.runtime.ui.prediction.innerHTML = `<div class="CoreText-sc-1txzju1-0">No prediction state detected.</div>`;
+
     }
 
     const levelClass = (lvl) => {

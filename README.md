@@ -69,7 +69,6 @@ Fallback raw URL:
 
 > [!CAUTION]
 > This script performs automated UI interaction on your Twitch account. Use conservative limits and only run it if you understand that risk. Channel Points have no cash value.
-
 ---
 
 ## Preview
@@ -77,6 +76,13 @@ Fallback raw URL:
 ![Twitch Prediction Bot Control Panel](pics/PREDICTION_MENU.png)
 
 ---
+
+### Open UI
+
+![Opening the Control Panel](pics/open_ui.gif)
+
+*Above: Clicking the bot icon in the Twitch navigation bar opens the in-page control panel. All controls and status indicators are available directly inside Twitch, with no page reload required.*
+
 
 ## Control Panel Guide
 

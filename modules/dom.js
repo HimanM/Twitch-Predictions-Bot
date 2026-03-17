@@ -118,7 +118,10 @@
     const values = Array.from(sections)
       .slice(0, 2)
       .map((section) => {
-        const svg = section.querySelector('svg[aria-label="Total Channel Points"]');
+        // Total points is always the first stat in each outcome section.
+        // Match any "Total ..." SVG label to support custom point names
+        // (e.g. "Total Pebbles", "Total Channel Points").
+        const svg = section.querySelector('svg[aria-label^="Total"]');
         const span = svg
           ?.closest('[data-test-selector="prediction-summary-stat__content"]')
           ?.querySelector("span");
@@ -191,10 +194,16 @@
   function makePredictionKey(state) {
     const title = document
       .querySelector(".prediction-checkout-details-header p:first-of-type")
-      ?.textContent?.trim() || "prediction";
+      ?.textContent?.trim();
+    // Cache the title so DOM transitions (detail view closing/reopening)
+    // don't produce a mismatched key between evaluate and watchAndExecute.
+    if (title) {
+      T.runtime._lastPredTitle = title;
+    }
+    const resolvedTitle = title || T.runtime._lastPredTitle || "prediction";
     const o0 = state?.outcomes?.[0]?.title || "A";
     const o1 = state?.outcomes?.[1]?.title || "B";
-    return `${title}::${o0}::${o1}`;
+    return `${resolvedTitle}::${o0}::${o1}`;
   }
 
   function readPredictionState() {
