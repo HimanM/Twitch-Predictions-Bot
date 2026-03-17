@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> This project currently only works for 2-choice predictions.
+
 <div align="center">
   <a href="https://www.twitch.tv/" target="_blank" rel="noreferrer">
     <img src="pics/UNDERDOG_TW_PRED_ICON.png" width="96" alt="Twitch Prediction Bot Icon" />
