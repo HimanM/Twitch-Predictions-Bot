@@ -43,7 +43,11 @@ Everything is controlled through a **Twitch-native dark panel** injected into th
 ---
 
 
-https://github.com/user-attachments/assets/e052e0ba-65c1-4be5-948b-1e785de9b714
+
+
+https://github.com/user-attachments/assets/ce044832-5ca1-492c-a36a-3e20bdba9d97
+
+
 
 
 
