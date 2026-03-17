@@ -85,7 +85,11 @@ Fallback raw URL:
 
 ### Open UI
 
-![Opening the Control Panel](pics/open_ui.gif)
+
+
+https://github.com/user-attachments/assets/c7861b40-b7f3-4094-9431-adebabc5a780
+
+
 
 *Above: Clicking the bot icon in the Twitch navigation bar opens the in-page control panel. All controls and status indicators are available directly inside Twitch, with no page reload required.*
 
