@@ -39,6 +39,12 @@ Everything is controlled through a **Twitch-native dark panel** injected into th
 
 ---
 
+
+https://github.com/user-attachments/assets/e052e0ba-65c1-4be5-948b-1e785de9b714
+
+
+
+
 ## Installation
 
 ### One-Click Install
