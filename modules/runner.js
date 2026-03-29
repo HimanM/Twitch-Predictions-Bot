@@ -338,7 +338,7 @@
 
     const secondsLeft = Number(state.secondsLeft);
     const pendingSeconds = Number(T.runtime.pendingDecision?.secondsLeft);
-    const withinTrigger = (
+    const withinLastSeconds = (
       Number.isFinite(secondsLeft) && secondsLeft <= T.CONFIG.BET_TRIGGER_SECONDS
     ) || (
       Number.isFinite(pendingSeconds) &&
@@ -346,11 +346,22 @@
       T.runtime.pendingDecision?.predictionKey === key
     );
 
+    // Early bet trigger: place bet earlier based on user-configured minutes
+    const earlyTriggerSeconds = T.settings.earlyBetEnabled
+      ? (Number(T.settings.earlyBetMinutes) || 5) * 60
+      : 0;
+    const withinEarlyTrigger = T.settings.earlyBetEnabled &&
+      Number.isFinite(secondsLeft) &&
+      secondsLeft <= earlyTriggerSeconds &&
+      state.status === "ACTIVE";
+
+    const withinTrigger = withinLastSeconds || withinEarlyTrigger;
+
     // Last-chance trigger: if the prediction JUST locked but we had a recent
     // bettable decision within the trigger window, attempt to bet anyway.
     const lastBettable = T.runtime.lastBettableDecision;
     const lastChanceTrigger = Boolean(
-      !withinTrigger &&
+      !withinLastSeconds &&
       state.status !== "ACTIVE" &&
       lastBettable?.shouldBet &&
       lastBettable.predictionKey === key &&
@@ -377,10 +388,22 @@
       }
       const { decision, source, ageMs } = picked;
 
+      // If one side currently has 0 points at trigger time, cap amount to min bet
+      // regardless of what the stale fallback decision calculated earlier.
+      const [oa, ob] = state.outcomes;
+      if (oa && ob && (oa.totalPoints === 0 || ob.totalPoints === 0) && !(oa.totalPoints === 0 && ob.totalPoints === 0)) {
+        const minBet = T.getAutoMinBet();
+        if (decision.amount > minBet) {
+          log(`0-point side detected at trigger — capping amount from ${decision.amount} to ${minBet}.`, "info");
+          decision.amount = Math.min(minBet, state.myAvailablePoints);
+        }
+      }
+
       log(
         `Trigger decision: source=${source}, outcome=${decision.outcomeTitle}, amount=${decision.amount}` +
         `${source === "fallback" ? `, ageMs=${ageMs}` : ""}` +
-        `${lastChanceTrigger ? ` (last-chance, status=${state.status})` : ""}.`
+        `${lastChanceTrigger ? ` (last-chance, status=${state.status})` : ""}` +
+        `${withinEarlyTrigger && !withinLastSeconds ? ` (early-bet, ${Math.round(secondsLeft / 60)}m left)` : ""}.`
       );
 
       clearIntervals();

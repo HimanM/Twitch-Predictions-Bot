@@ -899,6 +899,17 @@
             </div>
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-dry-run" type="checkbox"> <span>Dry Run (No bet clicks)</span></label></div>
             <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-force-min-on-skip" type="checkbox"> <span>Disable Skip (bet Auto Min on skips)</span></label></div>
+            <div class="tpred-row"><label class="tpred-toggle"><input id="tpred-early-bet" type="checkbox"> <span>Early Bet Timer</span></label></div>
+            <div class="tpred-row tpred-inline" id="tpred-early-bet-row" style="display:none">
+              <label>Bet at (min remaining)</label>
+              <div class="tpred-input-wrap">
+                <input id="tpred-early-bet-min" type="number" min="1" step="1" class="ScInputBase-sc-vu7u7d-0 ScInput-sc-19xfhag-0 tw-input" />
+                <div class="tpred-stepper">
+                  <button class="tpred-step-btn" type="button" data-target="tpred-early-bet-min" data-dir="down">-</button>
+                  <button class="tpred-step-btn" type="button" data-target="tpred-early-bet-min" data-dir="up">+</button>
+                </div>
+              </div>
+            </div>
             <div class="tpred-settings-divider" aria-hidden="true"></div>
             <div class="tpred-section-label">Strategy</div>
             <div class="tpred-segment-row">
@@ -1022,6 +1033,9 @@
     T.runtime.ui.toggleAutoOpenDetails = root.querySelector("#tpred-auto-details");
     T.runtime.ui.toggleLogsDisabled = root.querySelector("#tpred-logs-disabled");
     T.runtime.ui.toggleAutoClear = root.querySelector("#tpred-autoclear-logs");
+    T.runtime.ui.toggleEarlyBet = root.querySelector("#tpred-early-bet");
+    T.runtime.ui.earlyBetMinutes = root.querySelector("#tpred-early-bet-min");
+    T.runtime.ui.earlyBetRow = root.querySelector("#tpred-early-bet-row");
 
     root.querySelector("#tpred-toggle")?.addEventListener("click", () => {
       T.settings.panelOpen = !T.settings.panelOpen;
@@ -1117,6 +1131,9 @@
     if (T.runtime.ui.manualAmount) T.runtime.ui.manualAmount.value = String(T.settings.manualAmount || 100);
     if (T.runtime.ui.autoMinBet) T.runtime.ui.autoMinBet.value = String(T.getAutoMinBet());
     if (T.runtime.ui.autoMaxBet) T.runtime.ui.autoMaxBet.value = String(T.getAutoMaxBet());
+    if (T.runtime.ui.toggleEarlyBet) T.runtime.ui.toggleEarlyBet.checked = Boolean(T.settings.earlyBetEnabled);
+    if (T.runtime.ui.earlyBetMinutes) T.runtime.ui.earlyBetMinutes.value = String(T.settings.earlyBetMinutes || 5);
+    if (T.runtime.ui.earlyBetRow) T.runtime.ui.earlyBetRow.style.display = T.settings.earlyBetEnabled ? "" : "none";
 
     const applyStrategyModeToUi = () => {
       const mode = T.settings.strategyMode === "dynamic" ? "dynamic" : "fixed";
@@ -1146,6 +1163,22 @@
       T.settings.forceMinOnSkip = T.runtime.ui.toggleForceMinOnSkip.checked;
       T.saveSettings();
       T.log(`Disable Skip ${T.settings.forceMinOnSkip ? "enabled" : "disabled"}.`, "info");
+      T.evaluate();
+    });
+
+    T.runtime.ui.toggleEarlyBet?.addEventListener("change", () => {
+      T.settings.earlyBetEnabled = T.runtime.ui.toggleEarlyBet.checked;
+      T.saveSettings();
+      if (T.runtime.ui.earlyBetRow) T.runtime.ui.earlyBetRow.style.display = T.settings.earlyBetEnabled ? "" : "none";
+      T.log(`Early Bet Timer ${T.settings.earlyBetEnabled ? "enabled" : "disabled"}.`, "info");
+    });
+
+    T.runtime.ui.earlyBetMinutes?.addEventListener("change", () => {
+      const val = Math.max(1, parseInt(T.runtime.ui.earlyBetMinutes.value || "5", 10) || 5);
+      T.settings.earlyBetMinutes = val;
+      T.runtime.ui.earlyBetMinutes.value = String(val);
+      T.saveSettings();
+      T.log(`Early Bet Timer set to ${val} min remaining.`, "info");
     });
 
     T.runtime.ui.strategyMode?.addEventListener("click", (event) => {
