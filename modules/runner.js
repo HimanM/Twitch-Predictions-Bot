@@ -260,6 +260,15 @@
     if (T.runtime._earlyBetInitialKey !== predKey) {
       T.runtime._earlyBetInitialKey = predKey;
       T.runtime._earlyBetInitialSeconds = Number.isFinite(state.secondsLeft) ? state.secondsLeft : null;
+      if (T.settings.earlyBetEnabled) {
+        const earlyThresh = (Number(T.settings.earlyBetMinutes) || 5) * 60;
+        log(
+          `Early bet: initial timer=${T.runtime._earlyBetInitialSeconds}s, ` +
+          `threshold=${earlyThresh}s (${T.settings.earlyBetMinutes}m). ` +
+          `${T.runtime._earlyBetInitialSeconds > earlyThresh ? "Early trigger eligible." : "Too short — normal trigger only."}`,
+          "info"
+        );
+      }
     }
 
     const rawDecision = T.decideBet(state);
