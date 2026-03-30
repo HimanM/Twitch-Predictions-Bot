@@ -255,6 +255,13 @@
 
     T.runtime.latestState = state;
 
+    // Track the initial timer when a prediction is first detected
+    const predKey = T.makePredictionKey(state);
+    if (T.runtime._earlyBetInitialKey !== predKey) {
+      T.runtime._earlyBetInitialKey = predKey;
+      T.runtime._earlyBetInitialSeconds = Number.isFinite(state.secondsLeft) ? state.secondsLeft : null;
+    }
+
     const rawDecision = T.decideBet(state);
     const decision = T.applyForceMinBetIfEnabled(state, rawDecision);
     T.runtime.pendingDecision = {
@@ -346,13 +353,20 @@
       T.runtime.pendingDecision?.predictionKey === key
     );
 
-    // Early bet trigger: place bet earlier based on user-configured minutes
+    // Early bet trigger: place bet earlier based on user-configured minutes.
+    // Only activates if the prediction's initial timer was LONGER than the
+    // threshold — prevents instant firing on short-duration predictions.
     const earlyTriggerSeconds = T.settings.earlyBetEnabled
       ? (Number(T.settings.earlyBetMinutes) || 5) * 60
       : 0;
+    const initialSeconds = T.runtime._earlyBetInitialKey === key
+      ? T.runtime._earlyBetInitialSeconds
+      : null;
     const withinEarlyTrigger = T.settings.earlyBetEnabled &&
       Number.isFinite(secondsLeft) &&
       secondsLeft <= earlyTriggerSeconds &&
+      Number.isFinite(initialSeconds) &&
+      initialSeconds > earlyTriggerSeconds &&
       state.status === "ACTIVE";
 
     const withinTrigger = withinLastSeconds || withinEarlyTrigger;
