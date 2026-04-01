@@ -514,6 +514,9 @@
     const listItem = document.querySelector(".predictions-list-item");
     if (!listItem) {
       logChanged("discoveryStatus", "Discovery: no prediction card found.");
+      // Previous prediction cycle complete — reset so same-named predictions can bet again
+      T.runtime.placedForPredictionKey = null;
+      T.runtime._earlyBetInitialKey = null;
       T.closeRewardCenterPanel({ silent: true });
       return;
     }
@@ -535,6 +538,10 @@
       return;
     }
 
+    // Non-ACTIVE (LOCKED/RESOLVED/CANCELED) — clear placed key so next
+    // prediction with same name can bet
+    T.runtime.placedForPredictionKey = null;
+    T.runtime._earlyBetInitialKey = null;
     T.closeRewardCenterPanel({ silent: true });
   }
 
