@@ -255,6 +255,22 @@
 
     T.runtime.latestState = state;
 
+    // Track the initial timer when a prediction is first detected
+    const predKey = T.makePredictionKey(state);
+    if (T.runtime._earlyBetInitialKey !== predKey) {
+      T.runtime._earlyBetInitialKey = predKey;
+      T.runtime._earlyBetInitialSeconds = Number.isFinite(state.secondsLeft) ? state.secondsLeft : null;
+      if (T.settings.earlyBetEnabled) {
+        const earlyThresh = (Number(T.settings.earlyBetMinutes) || 5) * 60;
+        log(
+          `Early bet: initial timer=${T.runtime._earlyBetInitialSeconds}s, ` +
+          `threshold=${earlyThresh}s (${T.settings.earlyBetMinutes}m). ` +
+          `${T.runtime._earlyBetInitialSeconds > earlyThresh ? "Early trigger eligible." : "Too short — normal trigger only."}`,
+          "info"
+        );
+      }
+    }
+
     const rawDecision = T.decideBet(state);
     const decision = T.applyForceMinBetIfEnabled(state, rawDecision);
     T.runtime.pendingDecision = {
@@ -338,7 +354,7 @@
 
     const secondsLeft = Number(state.secondsLeft);
     const pendingSeconds = Number(T.runtime.pendingDecision?.secondsLeft);
-    const withinTrigger = (
+    const withinLastSeconds = (
       Number.isFinite(secondsLeft) && secondsLeft <= T.CONFIG.BET_TRIGGER_SECONDS
     ) || (
       Number.isFinite(pendingSeconds) &&
@@ -346,11 +362,29 @@
       T.runtime.pendingDecision?.predictionKey === key
     );
 
+    // Early bet trigger: place bet earlier based on user-configured minutes.
+    // Only activates if the prediction's initial timer was LONGER than the
+    // threshold — prevents instant firing on short-duration predictions.
+    const earlyTriggerSeconds = T.settings.earlyBetEnabled
+      ? (Number(T.settings.earlyBetMinutes) || 5) * 60
+      : 0;
+    const initialSeconds = T.runtime._earlyBetInitialKey === key
+      ? T.runtime._earlyBetInitialSeconds
+      : null;
+    const withinEarlyTrigger = T.settings.earlyBetEnabled &&
+      Number.isFinite(secondsLeft) &&
+      secondsLeft <= earlyTriggerSeconds &&
+      Number.isFinite(initialSeconds) &&
+      initialSeconds > earlyTriggerSeconds &&
+      state.status === "ACTIVE";
+
+    const withinTrigger = withinLastSeconds || withinEarlyTrigger;
+
     // Last-chance trigger: if the prediction JUST locked but we had a recent
     // bettable decision within the trigger window, attempt to bet anyway.
     const lastBettable = T.runtime.lastBettableDecision;
     const lastChanceTrigger = Boolean(
-      !withinTrigger &&
+      !withinLastSeconds &&
       state.status !== "ACTIVE" &&
       lastBettable?.shouldBet &&
       lastBettable.predictionKey === key &&
@@ -377,10 +411,22 @@
       }
       const { decision, source, ageMs } = picked;
 
+      // If one side currently has 0 points at trigger time, cap amount to min bet
+      // regardless of what the stale fallback decision calculated earlier.
+      const [oa, ob] = state.outcomes;
+      if (oa && ob && (oa.totalPoints === 0 || ob.totalPoints === 0) && !(oa.totalPoints === 0 && ob.totalPoints === 0)) {
+        const minBet = T.getAutoMinBet();
+        if (decision.amount > minBet) {
+          log(`0-point side detected at trigger — capping amount from ${decision.amount} to ${minBet}.`, "info");
+          decision.amount = Math.min(minBet, state.myAvailablePoints);
+        }
+      }
+
       log(
         `Trigger decision: source=${source}, outcome=${decision.outcomeTitle}, amount=${decision.amount}` +
         `${source === "fallback" ? `, ageMs=${ageMs}` : ""}` +
-        `${lastChanceTrigger ? ` (last-chance, status=${state.status})` : ""}.`
+        `${lastChanceTrigger ? ` (last-chance, status=${state.status})` : ""}` +
+        `${withinEarlyTrigger && !withinLastSeconds ? ` (early-bet, ${Math.round(secondsLeft / 60)}m left)` : ""}.`
       );
 
       clearIntervals();
@@ -468,6 +514,9 @@
     const listItem = document.querySelector(".predictions-list-item");
     if (!listItem) {
       logChanged("discoveryStatus", "Discovery: no prediction card found.");
+      // Previous prediction cycle complete — reset so same-named predictions can bet again
+      T.runtime.placedForPredictionKey = null;
+      T.runtime._earlyBetInitialKey = null;
       T.closeRewardCenterPanel({ silent: true });
       return;
     }
@@ -489,6 +538,10 @@
       return;
     }
 
+    // Non-ACTIVE (LOCKED/RESOLVED/CANCELED) — clear placed key so next
+    // prediction with same name can bet
+    T.runtime.placedForPredictionKey = null;
+    T.runtime._earlyBetInitialKey = null;
     T.closeRewardCenterPanel({ silent: true });
   }
 

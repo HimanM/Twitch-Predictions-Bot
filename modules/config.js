@@ -96,6 +96,8 @@
       manualAmount: 100,
       logsDisabled: false,
       autoClearLogs: false,
+      earlyBetEnabled: false,
+      earlyBetMinutes: 5,
     };
 
     try {
