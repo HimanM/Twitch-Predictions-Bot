@@ -1,3 +1,9 @@
+<!-- BANNER_START -->
+<p align="center">
+  <img src="./.banner/banner.svg" width="100%" alt="Project Banner">
+</p>
+<!-- BANNER_END -->
+
 > [!IMPORTANT]
 > This project currently only works for 2-choice predictions.
 
